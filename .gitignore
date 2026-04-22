@@ -1,0 +1,24 @@
+# Node.js dependencies
+node_modules/
+
+# Vercel deployment artifacts
+.vercel/
+
+# Environment files
+.env
+.env.*  # for cases like .env.local, .env.production
+
+# Jest or other test outputs
+coverage/
+__tests__/
+*.spec.js
+*.test.js
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Optional: OS-specific files
+.DS_Store
+Thumbs.db
