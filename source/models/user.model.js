@@ -8,6 +8,16 @@ const userSchema = new mongoose.Schema(
         type:mongoose.Schema.Types.ObjectId,
         ref:"Role",
     },
+    extraPermissions:{
+      type: [mongoose.Schema.Types.ObjectId],
+      default: [],
+      ref: "Permission"
+    },
+    excludedPermissions:{
+      type: [mongoose.Schema.Types.ObjectId],
+      default: [],
+      ref: "Permission"
+    },
     name: { type: String, required: true },
     email: { type: String, required: true },
     password: { type: String, required: true, select: false },

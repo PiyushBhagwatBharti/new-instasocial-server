@@ -100,12 +100,13 @@ export const UserController = {
   login: asyncHandler(async (req, res) => {
     const { email, password } = req.body;
 
-    const user = await UserRepo.getUser({ email });
+    const user = await UserRepo.getUser({ email, selectPassword: true });
     if (!user) {
       throw new ApiError(404, USER_CTR_MSG.USER_NOT_FOUND);
     }
-
+    console.log({user})
     const isMatch = await user.comparePassword(password);
+    console.log({isMatch})
 
     if (!isMatch) {
       throw new ApiError(404, USER_CTR_MSG.USER_NOT_FOUND);
@@ -114,7 +115,8 @@ export const UserController = {
     const payload = {
       name: user.name,
       email: user.email,
-      role: user.role,
+      role: user.roles,
+      _id:user._id
     };
 
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
@@ -124,6 +126,6 @@ export const UserController = {
     const userObj = user.toObject();
     delete userObj.password;
 
-    res.status(200).json(200, { token, user: userObj });
+    res.status(200).json(new ApiResponse(200, { token, user: userObj }));
   }),
 };
