@@ -104,9 +104,9 @@ export const UserController = {
     if (!user) {
       throw new ApiError(404, USER_CTR_MSG.USER_NOT_FOUND);
     }
-    console.log({user})
+    console.log({ user });
     const isMatch = await user.comparePassword(password);
-    console.log({isMatch})
+    console.log({ isMatch });
 
     if (!isMatch) {
       throw new ApiError(404, USER_CTR_MSG.USER_NOT_FOUND);
@@ -116,7 +116,7 @@ export const UserController = {
       name: user.name,
       email: user.email,
       role: user.roles,
-      _id:user._id
+      _id: user._id,
     };
 
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
