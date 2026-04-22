@@ -2,6 +2,7 @@ import { USER_CTR_MSG } from "../constants/API_MESSAGES.js";
 import { OrganizationModel } from "../models/organization.model.js";
 import { UserModel } from "../models/user.model.js";
 import { TenantRepo } from "../reposetories/tenant.repo.js";
+import { UserService } from "../services/user.service.js";
 import {
   ApiError,
   ApiResponse,
@@ -18,15 +19,6 @@ export const UserController = {
     const { organizationName, name, email, password } = req.body;
     console.log("Creating super Admin", { organizationName, name, email });
 
-    const existingUser = await UserModel.findOne({
-      email,
-      // tenantId: tenant._id,
-    }).setOptions({ skipTenant: true });
-    if (existingUser) {
-      console.warn("Email already exists", { email });
-      throw new ApiError(400, USER_CTR_MSG.EMAIL_ALREADY_EXISTS);
-    }
-
     //1. create Tenant
     const { user, tenant } = await withTransaction(async (session) => {
       console.log("creting tenant");
@@ -37,12 +29,13 @@ export const UserController = {
       console.log({ tenant });
 
       return await setTenantContext(tenant._id, async () => {
-        const [user] = await UserModel.create(
-          [{ name, email, password, tenantId: tenant._id }],
-          {
-            session,
-          },
-        );
+        const user = await UserService.create({
+          name,
+          email,
+          skipTenantCheck: true,
+          password,
+          tenantId: tenant._id,
+        });
 
         const [org] = await OrganizationModel.create(
           [
@@ -76,6 +69,7 @@ export const UserController = {
         ),
       );
   }),
+
   signup: asyncHandler(async (req, res) => {
     const { name, email, password, role } = req.body;
 
@@ -84,15 +78,12 @@ export const UserController = {
       throw new ApiError(400, USER_CTR_MSG.ALL_FIELDS_ARE_REQUIRED);
     }
 
-    const existingUser = await UserModel.findOne({ email });
-    if (existingUser) {
-      console.warn("Email already exists", { email });
-      throw new ApiError(400, USER_CTR_MSG.EMAIL_ALREADY_EXISTS);
-    }
-
-    const newUser = new UserModel({ name, email, password, role });
-    const savedUser = await newUser.save();
-    console.log("New user created", { userId: savedUser._id, email, role });
+    const newUser = await UserService.create({
+      name,
+      email,
+      password,
+      tenantId: req.tenant._id,
+    });
 
     return res
       .status(201)

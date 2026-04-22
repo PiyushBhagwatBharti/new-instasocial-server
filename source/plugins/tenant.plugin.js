@@ -14,7 +14,7 @@ export const tenantPlugin = (schema) => {
     const tenantId = getTenantId();
 
     // Allow internal scripts to bypass
-    if (!tenantId && this.getOptions().skipTenant) {
+    if (this.getOptions().skipTenant) {
       return;
     }
 

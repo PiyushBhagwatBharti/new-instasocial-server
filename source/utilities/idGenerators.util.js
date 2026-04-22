@@ -5,7 +5,7 @@ export const IdGenerators = {
     if (type === "number") {
       scope = "0123456789";
     } else if (type === "text") {
-      scope = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      scope = "abcdefghijklmnopqrstuvwxyz";
     } else if (type === "alpha") {
       scope = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     } else {
