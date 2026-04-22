@@ -4,12 +4,10 @@ import bcrypt from "bcryptjs";
 
 const userSchema = new mongoose.Schema(
   {
-    role: {
-      type: String,
-      enum: ["user", "admin"],
-      default: "user",
+    roles:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Role",
     },
-
     name: { type: String, required: true },
     email: { type: String, required: true },
     password: { type: String, required: true, select: false },

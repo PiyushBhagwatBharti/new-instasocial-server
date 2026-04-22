@@ -80,3 +80,28 @@ export const ADMIN_MESSAGES = {
   ERROR_UPDATING_ADMIN: "An error occurred while updating the admin",
   ERROR_DELETING_ADMIN: "An error occurred while deleting the admin",
 };
+
+export const ROLE_MESSAGES = {
+  CREATED: "Role created successfully",
+  UPDATED: "Role updated successfully",
+  FETCHED: "Roles fetched successfully",
+  NOT_FOUND: "Role not found",
+  EXIST: "Role already exists",
+  DELETED: "Role deleted successfully",
+  IN_USE: "Role is assigned to users and cannot be deleted",
+  SYSTEM_ROLE_EDIT: "System created roles can't be edited",
+  DUPLICATE_NAME: "Duplicate role name is not allowed",
+};
+
+export const PERMISSION_MESSAGES = {
+  FETCHED: "Permissions fetched successfully",
+  INVALID: "Invalid permissions provided",
+};
+
+export const COMMON_MESSAGES = {
+  INVALID_UPDATES: "No valid fields provided for update",
+  UNAUTHORIZED: "Unauthorized access",
+  FORBIDDEN: "Forbidden action",
+  SERVER_ERROR: "Something went wrong",
+  VALIDATION_ERROR: "Validation failed",
+};

@@ -1,7 +1,9 @@
 import { app } from "./source/app.js";
-import { config } from "dotenv";
+// import { config } from "dotenv";
 
-config();
+
+// config();
+// import 'dotenv/config';
 
 const port = 4000;
 app.listen(port, () => {
