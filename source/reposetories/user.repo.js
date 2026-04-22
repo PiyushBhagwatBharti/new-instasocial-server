@@ -20,11 +20,11 @@ export const UserRepo = {
     return user;
   },
 
-  async getUser({ email, userId, skipTenantCheck = false }) {
+  async getUser({ email, userId, skipTenantCheck = false, selectPassword = false }) {
     let query =
       userId && mongoose.isValidObjectId(userId) ? { _id: userId } : { email };
 
-    const existingUser = await UserModel.findOne(query).setOptions({
+    const existingUser = await UserModel.findOne(query).select(selectPassword ? "+password" : "").setOptions({
       skipTenant: skipTenantCheck,
     });
     return existingUser;

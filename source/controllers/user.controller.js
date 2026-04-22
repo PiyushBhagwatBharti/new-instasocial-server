@@ -1,7 +1,8 @@
 import { USER_CTR_MSG } from "../constants/API_MESSAGES.js";
 import { OrganizationModel } from "../models/organization.model.js";
-import { UserModel } from "../models/user.model.js";
+import jwt from "jsonwebtoken";
 import { TenantRepo } from "../reposetories/tenant.repo.js";
+import { UserRepo } from "../reposetories/user.repo.js";
 import { UserService } from "../services/user.service.js";
 import {
   ApiError,
@@ -94,5 +95,37 @@ export const UserController = {
           USER_CTR_MSG.USER_CREATED_SUCCESSFULLY,
         ),
       );
+  }),
+
+  login: asyncHandler(async (req, res) => {
+    const { email, password } = req.body;
+
+    const user = await UserRepo.getUser({ email, selectPassword: true });
+    if (!user) {
+      throw new ApiError(404, USER_CTR_MSG.USER_NOT_FOUND);
+    }
+    console.log({ user });
+    const isMatch = await user.comparePassword(password);
+    console.log({ isMatch });
+
+    if (!isMatch) {
+      throw new ApiError(404, USER_CTR_MSG.USER_NOT_FOUND);
+    }
+
+    const payload = {
+      name: user.name,
+      email: user.email,
+      role: user.roles,
+      _id: user._id,
+    };
+
+    const token = jwt.sign(payload, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRES,
+    });
+
+    const userObj = user.toObject();
+    delete userObj.password;
+
+    res.status(200).json(new ApiResponse(200, { token, user: userObj }));
   }),
 };
