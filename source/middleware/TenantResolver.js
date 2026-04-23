@@ -33,7 +33,7 @@ export const tenantResolver = async (req, res, next) => {
         domain,
         isActive: true,
       })
-        .select("_id isActive")
+        .select("_id isActive domain")
         .lean();
 
       if (!tenant) {
@@ -52,6 +52,7 @@ export const tenantResolver = async (req, res, next) => {
     // -------- CONTEXT --------
     tenantContext.run({ tenantId: tenant._id }, () => {
       req.tenant = tenant;
+      console.log({ tenant });
       next();
     });
   } catch (err) {
