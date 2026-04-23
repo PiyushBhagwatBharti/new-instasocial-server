@@ -32,7 +32,7 @@ const PlatformSchema = new mongoose.Schema(
 
     // ── Auth Tokens (ENCRYPTED in production) ───────
     auth: {
-      accessToken: { type: String, required: true },
+      accessToken: { type: String },
       refreshToken: String,
       tokenExpiresAt: Date, // crucial for knowing when to refresh
       scope: [String], // what permissions were granted
