@@ -17,6 +17,7 @@ import {
 import { Role } from "../models/role.model.js";
 import { Permission } from "../models/permission.model.js";
 import { AUDIT_ACTIONS } from "../constants/AUDIT_MESSAGES.js";
+import { createAuditLog } from "../utilities/auditLog/audit.util.js";
 
 export const UserController = {
   registerCompany: asyncHandler(async (req, res) => {
@@ -77,7 +78,9 @@ export const UserController = {
           action: AUDIT_ACTIONS.ORGANIZATION_CREATE,
           entity: `Organization: ${org.name}`,
           entityId: org._id,
+          userId: user._id,
           oldValue: null,
+          tenantId: tenant._id,
           newValue: org,
           description: `Organization "${org.name}" was created with initial configuration`
 
@@ -120,16 +123,16 @@ export const UserController = {
       tenantId: req.tenant._id,
     });
 
-    createAuditLog({
-          req,
-          action: AUDIT_ACTIONS.USER_CREATE,
-          entity: `User: ${newUser.name}`,
-          entityId: newUser?._id,
-          oldValue: null,
-          newValue: newUser,
-          description: `User "${newUser.name}" was created`
+    // createAuditLog({
+    //       req,
+    //       action: AUDIT_ACTIONS.USER_CREATE,
+    //       entity: `User: ${newUser.name}`,
+    //       entityId: newUser?._id,
+    //       oldValue: null,
+    //       newValue: newUser,
+    //       description: `User "${newUser.name}" was created`
 
-        });
+    //     });
 
     return res
       .status(201)
@@ -179,16 +182,16 @@ export const UserController = {
     const userObj = user.toObject();
     delete userObj.password;
 
-    createAuditLog({
-          req,
-          action: AUDIT_ACTIONS.USER_LOGIN,
-          entity: `User: ${user.name}`,
-          entityId: user?._id,
-          oldValue: null,
-          newValue: null,
-          description: `User "${newUser.name}" login successfully.`
+    // createAuditLog({
+    //       req,
+    //       action: AUDIT_ACTIONS.USER_LOGIN,
+    //       entity: `User: ${user.name}`,
+    //       entityId: user?._id,
+    //       oldValue: null,
+    //       newValue: null,
+    //       description: `User "${newUser.name}" login successfully.`
 
-        });
+    //     });
 
     res.status(200).json(new ApiResponse(200, { token, user: userObj }));
   }),

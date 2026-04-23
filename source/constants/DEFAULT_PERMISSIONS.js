@@ -73,7 +73,6 @@ export const DEFAULT_PERMISSIONS = [
     module: "ai",
     label: "Generate AI Content",
     isActive: true,
-<<<<<<< HEAD
   },
   {
     key: "ai.image",
@@ -100,33 +99,29 @@ export const DEFAULT_PERMISSIONS = [
     module: "roles",
     label: "Update Roles",
     isActive: true,
-=======
->>>>>>> c70c6688696591d80553b7c3976ce20c5e731648
   },
   {
-    key: "ai.image",
-    module: "ai",
-    label: "Generate AI Images",
-    isActive: true,
-  },
-
-  // 🔹 Roles Management
-  {
-    key: "roles.create",
-    module: "roles",
-    label: "Create Roles",
+    key: "posts.create",
+    module: "posts",
+    label: "Create Posts",
     isActive: true,
   },
   {
-    key: "roles.read",
-    module: "roles",
-    label: "View Roles",
+    key: "posts.read",
+    module: "posts",
+    label: "View Posts",
     isActive: true,
   },
   {
-    key: "roles.update",
-    module: "roles",
-    label: "Update Roles",
+    key: "posts.update",
+    module: "posts",
+    label: "Update Posts",
+    isActive: true,
+  },
+  {
+    key: "posts.cancel",
+    module: "posts",
+    label: "Cancel Posts",
     isActive: true,
   },
 ];
