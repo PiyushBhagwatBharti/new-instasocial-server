@@ -54,7 +54,7 @@ export const uploadImage = async (input, savePath) => {
           ...uploadData.getHeaders(),
           "x-instacloud-api-key": process.env.INSTACLOUD_S3_API_KEY,
           "Content-Type": "image/png", // or application/pdf
-          "Content-Length": buffer.Length,
+          "Content-Length": buffer.length,
         },
       },
     );

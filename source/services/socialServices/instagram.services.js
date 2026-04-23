@@ -170,9 +170,12 @@ export const createInstagramService = ({ accessToken, pageId }) => {
 
     const igUserId = await getIGUserId();
 
+    console.log("Inst details of post:", { imageUrl, caption, igUserId });
+
     // STEP 1: create container
     const media = await igRequest({
       url: `${base}/${igUserId}/media`,
+      type: "photo",
       method: "POST",
       params: {
         image_url: imageUrl,
