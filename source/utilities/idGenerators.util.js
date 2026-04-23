@@ -22,3 +22,12 @@ export const IdGenerators = {
     return result;
   },
 };
+
+export const sluggify = (text) => {
+  return text
+    .toLowerCase()
+    ?.trim()
+    .replace(/[^a-z0-9\s]/g, "") // remove special chars (;,.,etc)
+    .replace(/\s+/g, "_") // spaces → _
+    .replace(/_+/g, "_"); // collapse multiple _
+};
