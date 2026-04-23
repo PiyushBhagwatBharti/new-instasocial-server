@@ -1,4 +1,5 @@
 import { COMMON_MESSAGES, ROLE_MESSAGES } from "../constants/API_MESSAGES.js";
+import { AUDIT_ACTIONS } from "../constants/AUDIT_MESSAGES.js";
 import { Permission } from "../models/permission.model.js";
 import { Role } from "../models/role.model.js";
 import { UserModel } from "../models/user.model.js";
@@ -7,6 +8,7 @@ import {
   ApiResponse,
   asyncHandler,
 } from "../utilities/asyncHandler.util.js";
+import { createAuditLog, getDiff } from "../utilities/auditLog/audit.util.js";
 
 export const createRole = asyncHandler(async (req, res) => {
   const { name, description, permissionsIds } = req.body;
@@ -20,11 +22,24 @@ export const createRole = asyncHandler(async (req, res) => {
   const role = await Role.create({
     name,
     description,
-    permissions:permissionsIds,
+    permissions: permissionsIds,
     tenantId,
   });
 
   console.info(`role ${role.name} created`);
+
+  // 🔹 Audit
+  createAuditLog({
+    req,
+    action: AUDIT_ACTIONS.ROLE_CREATE,
+    entity: `Role: ${role.name}`,
+    entityId: role._id,
+    newValue: {
+      name: role.name,
+      permissions: role.permissions,
+    },
+    description:"new role was created"
+  });
 
   return res
     .status(201)
@@ -60,36 +75,80 @@ export const getRoleById = asyncHandler(async (req, res) => {
   if (!role) {
     throw new ApiError(404, ROLE_MESSAGES.NOT_FOUND);
   }
-  const adminCount = await Admin.countDocuments({ roles: role._id });
+  const assignUserAccounts = await UserModel.countDocuments({
+    roles: role._id,
+  });
   return res
     .status(200)
-    .json(new ApiResponse(200, { ...role, adminCount }, ROLE_MESSAGES.FETCHED));
+    .json(
+      new ApiResponse(
+        200,
+        { ...role, assignUserAccounts },
+        ROLE_MESSAGES.FETCHED,
+      ),
+    );
 });
 
 export const updateRole = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
+    const tenantId = req.tenant?._id;
 
     if (Object.keys(updates).length === 0) {
       throw new ApiError(400, COMMON_MESSAGES.INVALID_UPDATES);
     }
     const exisitingRole = await Role.findById(id);
-    if (exisitingRole.isSystem) {
+    if (exisitingRole?.isSystem) {
       throw new ApiError(400, "System created roles cant be edited");
     }
+    // const oldRole = await Role.findById(id).lean();
+    // const updatedRole = await Role.findByIdAndUpdate(
+    //   id,
+    //   { $set: updates },
+    //   { returnDocument: "after", runValidators: true },
+    // );
 
-    const updatedRole = await Role.findByIdAndUpdate(
-      id,
+    // if (!updatedRole) {
+    //   throw new ApiError(404, ROLE_MESSAGES.NOT_FOUND);
+    // }
+
+    // console.info(`role ${updatedRole.name} updated`);
+
+    // await createAuditLog({
+    //   req,
+    //   action: AUDIT_ACTIONS.ROLE_UPDATE,
+    //   entity: `Role: ${oldRole.name} `,
+    //   entityId: id,
+    //   oldValue: oldRole,
+    //   newValue: updatedRole,
+    // });
+
+    const oldRole = await Role.findOne({ _id: id, tenantId }).lean();
+
+    const updatedRole = await Role.findOneAndUpdate(
+      { _id: id, tenantId },
       { $set: updates },
       { returnDocument: "after", runValidators: true },
     );
+
+    const changes = getDiff(oldRole, updatedRole.toObject());
 
     if (!updatedRole) {
       throw new ApiError(404, ROLE_MESSAGES.NOT_FOUND);
     }
 
     console.info(`role ${updatedRole.name} updated`);
+
+    createAuditLog({
+      req,
+      action: AUDIT_ACTIONS.ROLE_UPDATE,
+      entity: `Role: ${updatedRole.name}`,
+      entityId: id,
+      oldValue: oldRole,
+      newValue: changes,
+      description:" role was updated"
+    });
 
     return res
       .status(200)

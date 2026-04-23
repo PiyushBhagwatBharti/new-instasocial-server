@@ -45,7 +45,7 @@ export const authMiddleware = async (req, res, next) => {
       _id: user._id,
       email: user.email,
       roles: user.roles?.name,
-      permissions:flattenUserPermissions({permissions: user.permissions, extraPermissions: user.extraPermissions, excludedPermissions:user.excludedPermissions }) || [],
+      permissions:flattenUserPermissions({permissions: user.roles?.permissions, extraPermissions: user.extraPermissions, excludedPermissions:user.excludedPermissions }) || [],
     };
 
     // 🔹 5. Attach tenant (multi-tenant support)

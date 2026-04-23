@@ -8,9 +8,10 @@ export const UserService = {
     email,
     skipTenantCheck = false,
     password,
-    role,
+    roles,
     tenantId,
     session,
+    isSuperAdmin= false
   }) {
     const exisitingUser = await UserRepo.getUser({ email, skipTenantCheck });
 
@@ -22,9 +23,10 @@ export const UserService = {
       name,
       email,
       password,
-      role,
+      roles,
       tenantId,
       session,
+      isSuperAdmin
     });
 
     const userObj = user.toObject();

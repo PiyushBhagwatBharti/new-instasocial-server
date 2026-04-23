@@ -6,6 +6,7 @@ import path from "path";
 import { errorHandler } from "./middleware/error.handler.js";
 import { config } from "dotenv";
 import { tenantResolver } from "./middleware/TenantResolver.js";
+import { rateLimiter } from "./middleware/rateLimiter.js";
 
 config();
 
@@ -20,6 +21,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+app.use(rateLimiter);
 
 connectDB();
 app.use(json());

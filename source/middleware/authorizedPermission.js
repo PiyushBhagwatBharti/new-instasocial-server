@@ -1,6 +1,5 @@
 import { COMMON_MESSAGES } from "../constants/API_MESSAGES.js";
 import { ApiError } from "../utilities/asyncHandler.util.js";
-import { flattenUserPermissions } from "../utilities/utils.js";
 
 export const authorizePermissions = (...requiredPermissions) => {
   return (req, res, next) => {

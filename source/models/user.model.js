@@ -8,6 +8,10 @@ const userSchema = new mongoose.Schema(
         type:mongoose.Schema.Types.ObjectId,
         ref:"Role",
     },
+    isSuperAdmin:{
+      type:Boolean,
+      default:false,
+    },
     extraPermissions:{
       type: [mongoose.Schema.Types.ObjectId],
       default: [],

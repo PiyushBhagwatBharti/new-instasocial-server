@@ -7,60 +7,6 @@ export const DEFAULT_PERMISSIONS = [
     isActive: true,
   },
 
-  // 🔹 Leads / CRM
-  {
-    key: "leads.create",
-    module: "leads",
-    label: "Create Leads",
-    isActive: true,
-  },
-  {
-    key: "leads.read",
-    module: "leads",
-    label: "View Leads",
-    isActive: true,
-  },
-  {
-    key: "leads.update",
-    module: "leads",
-    label: "Update Leads",
-    isActive: true,
-  },
-  {
-    key: "leads.delete",
-    module: "leads",
-    label: "Delete Leads",
-    isActive: false,
-  },
-
-  // 🔹 Contacts
-  {
-    key: "contacts.create",
-    module: "contacts",
-    label: "Create Contacts",
-    isActive: true,
-  },
-  {
-    key: "contacts.read",
-    module: "contacts",
-    label: "View Contacts",
-    isActive: true,
-  },
-
-  // 🔹 Ads / Campaigns
-  {
-    key: "ads.read",
-    module: "ads",
-    label: "View Ads",
-    isActive: true,
-  },
-  {
-    key: "ads.manage",
-    module: "ads",
-    label: "Manage Ad Campaigns",
-    isActive: false,
-  },
-
   // 🔹 Facebook Integration
   {
     key: "facebook.connect",
@@ -69,16 +15,16 @@ export const DEFAULT_PERMISSIONS = [
     isActive: true,
   },
   {
-    key: "facebook.leads.read",
+    key: "facebook.read",
     module: "facebook",
-    label: "Fetch Facebook Leads",
+    label: "View Facebook Leads",
     isActive: true,
   },
   {
     key: "facebook.pages.manage",
     module: "facebook",
     label: "Manage Facebook Pages",
-    isActive: false,
+    isActive: true,
   },
 
   // 🔹 Instagram Integration
@@ -91,14 +37,14 @@ export const DEFAULT_PERMISSIONS = [
   {
     key: "instagram.messages.read",
     module: "instagram",
-    label: "Read Instagram Messages",
+    label: "View Instagram Messages",
     isActive: true,
   },
   {
     key: "instagram.messages.reply",
     module: "instagram",
     label: "Reply to Instagram Messages",
-    isActive: false,
+    isActive: true,
   },
 
   // 🔹 YouTube Integration
@@ -111,21 +57,47 @@ export const DEFAULT_PERMISSIONS = [
   {
     key: "youtube.comments.read",
     module: "youtube",
-    label: "Read YouTube Comments",
+    label: "View YouTube Comments",
     isActive: true,
   },
   {
     key: "youtube.comments.reply",
     module: "youtube",
     label: "Reply to YouTube Comments",
-    isActive: false,
+    isActive: true,
   },
 
-  // 🔹 Pricing
+  // 🔹 AI Features
   {
-    key: "prices.custom",
-    module: "prices",
-    label: "Set Custom Prices",
-    isActive: false,
+    key: "ai.content",
+    module: "ai",
+    label: "Generate AI Content",
+    isActive: true,
+  },
+  {
+    key: "ai.image",
+    module: "ai",
+    label: "Generate AI Images",
+    isActive: true,
+  },
+
+  // 🔹 Roles Management
+  {
+    key: "roles.create",
+    module: "roles",
+    label: "Create Roles",
+    isActive: true,
+  },
+  {
+    key: "roles.read",
+    module: "roles",
+    label: "View Roles",
+    isActive: true,
+  },
+  {
+    key: "roles.update",
+    module: "roles",
+    label: "Update Roles",
+    isActive: true,
   },
 ];

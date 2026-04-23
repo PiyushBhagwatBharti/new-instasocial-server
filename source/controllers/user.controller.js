@@ -14,6 +14,9 @@ import {
   setTenantContext,
   tenantContext,
 } from "../utilities/TenantUtils/tenantContext.js";
+import { Role } from "../models/role.model.js";
+import { Permission } from "../models/permission.model.js";
+import { AUDIT_ACTIONS } from "../constants/AUDIT_MESSAGES.js";
 
 export const UserController = {
   registerCompany: asyncHandler(async (req, res) => {
@@ -30,12 +33,27 @@ export const UserController = {
       console.log({ tenant });
 
       return await setTenantContext(tenant._id, async () => {
+
+        const permissionIds = (await Permission.find()).map(p => p._id);
+
+        const [superadminRole] = await Role.create([{
+          name: "SuperAdmin",
+          isSystem: true,
+          description: "The SuperAdmin role has unrestricted access to all modules, features, and permissions across the entire system. This role is system-defined and cannot be modified",
+          permissions: permissionIds,
+          tenantId: tenant._id
+
+        }], {session})
+
         const user = await UserService.create({
           name,
           email,
           skipTenantCheck: true,
           password,
           tenantId: tenant._id,
+          session,
+          roles: [superadminRole._id],
+          isSuperAdmin:true,
         });
 
         const [org] = await OrganizationModel.create(
@@ -54,11 +72,27 @@ export const UserController = {
 
         console.log({ org });
 
+        createAuditLog({
+          req,
+          action: AUDIT_ACTIONS.ORGANIZATION_CREATE,
+          entity: `Organization: ${org.name}`,
+          entityId: org._id,
+          oldValue: null,
+          newValue: org,
+          description: `Organization "${org.name}" was created with initial configuration`
+
+        });
+
         return { user, tenant };
       });
     });
 
+
+
     console.log("Tenant, user, org created");
+    
+    
+    
 
     return res
       .status(201)
@@ -85,6 +119,17 @@ export const UserController = {
       password,
       tenantId: req.tenant._id,
     });
+
+    createAuditLog({
+          req,
+          action: AUDIT_ACTIONS.USER_CREATE,
+          entity: `User: ${newUser.name}`,
+          entityId: newUser?._id,
+          oldValue: null,
+          newValue: newUser,
+          description: `User "${newUser.name}" was created`
+
+        });
 
     return res
       .status(201)
@@ -125,6 +170,17 @@ export const UserController = {
 
     const userObj = user.toObject();
     delete userObj.password;
+
+    createAuditLog({
+          req,
+          action: AUDIT_ACTIONS.USER_LOGIN,
+          entity: `User: ${user.name}`,
+          entityId: user?._id,
+          oldValue: null,
+          newValue: null,
+          description: `User "${newUser.name}" login successfully.`
+
+        });
 
     res.status(200).json(new ApiResponse(200, { token, user: userObj }));
   }),

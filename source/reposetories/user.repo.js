@@ -6,12 +6,13 @@ export const UserRepo = {
     name,
     email,
     password,
-    role = null,
+    roles = [],
     tenantId,
     session = null,
+    isSuperAdmin
   }) {
     const [user] = await UserModel.create(
-      [{ name, email, password, tenantId, role }],
+      [{ name, email, password, tenantId, roles, isSuperAdmin }],
       {
         session,
       },
