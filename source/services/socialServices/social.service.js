@@ -110,7 +110,7 @@ export const createSocialService = ({ tenantId, retry }) => {
         const data = await execute({ service, payload, platformPayload });
 
         return {
-          platform: platformDoc,
+          platform: platformDoc.platform,
           success: true,
           postId: data.postId,
           type: data.type,
