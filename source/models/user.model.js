@@ -4,23 +4,27 @@ import bcrypt from "bcryptjs";
 
 const userSchema = new mongoose.Schema(
   {
-    roles:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"Role",
+    roles: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Role",
     },
+<<<<<<< HEAD
     isSuperAdmin:{
       type:Boolean,
       default:false,
     },
     extraPermissions:{
+=======
+    extraPermissions: {
+>>>>>>> c70c6688696591d80553b7c3976ce20c5e731648
       type: [mongoose.Schema.Types.ObjectId],
       default: [],
-      ref: "Permission"
+      ref: "Permission",
     },
-    excludedPermissions:{
+    excludedPermissions: {
       type: [mongoose.Schema.Types.ObjectId],
       default: [],
-      ref: "Permission"
+      ref: "Permission",
     },
     name: { type: String, required: true },
     email: { type: String, required: true },
@@ -60,5 +64,5 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
 };
 
 userSchema.plugin(tenantPlugin);
-userSchema.index({ email: 1, tenantId: 1 }, { unique: true });
+userSchema.index({ email: 1 }, { unique: true });
 export const UserModel = mongoose.model("User", userSchema);

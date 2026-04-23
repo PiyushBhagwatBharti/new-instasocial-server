@@ -14,9 +14,13 @@ import {
   setTenantContext,
   tenantContext,
 } from "../utilities/TenantUtils/tenantContext.js";
+<<<<<<< HEAD
 import { Role } from "../models/role.model.js";
 import { Permission } from "../models/permission.model.js";
 import { AUDIT_ACTIONS } from "../constants/AUDIT_MESSAGES.js";
+=======
+import { TenantModel } from "../models/tenant.model.js";
+>>>>>>> c70c6688696591d80553b7c3976ce20c5e731648
 
 export const UserController = {
   registerCompany: asyncHandler(async (req, res) => {
@@ -99,7 +103,7 @@ export const UserController = {
       .json(
         new ApiResponse(
           201,
-          { user, domain: tenant.domain },
+          { user, tenant: { domain: tenant.domain } },
           "SuperAdmin created",
         ),
       );
@@ -145,13 +149,17 @@ export const UserController = {
   login: asyncHandler(async (req, res) => {
     const { email, password } = req.body;
 
-    const user = await UserRepo.getUser({ email, selectPassword: true });
+    const user = await UserRepo.getUser({
+      email,
+      selectPassword: true,
+      skipTenantCheck: true,
+    });
     if (!user) {
       throw new ApiError(404, USER_CTR_MSG.USER_NOT_FOUND);
     }
-    console.log({user})
+    console.log({ user });
     const isMatch = await user.comparePassword(password);
-    console.log({isMatch})
+    console.log({ isMatch });
 
     if (!isMatch) {
       throw new ApiError(404, USER_CTR_MSG.USER_NOT_FOUND);
@@ -161,16 +169,21 @@ export const UserController = {
       name: user.name,
       email: user.email,
       role: user.roles,
-      _id:user._id
+      _id: user._id,
     };
 
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
       expiresIn: process.env.JWT_EXPIRES,
     });
 
+    const tenant = await TenantModel.findOne({ _id: user.tenantId }).select(
+      "domain",
+    );
+
     const userObj = user.toObject();
     delete userObj.password;
 
+<<<<<<< HEAD
     createAuditLog({
           req,
           action: AUDIT_ACTIONS.USER_LOGIN,
@@ -183,5 +196,16 @@ export const UserController = {
         });
 
     res.status(200).json(new ApiResponse(200, { token, user: userObj }));
+=======
+    res
+      .status(200)
+      .json(
+        new ApiResponse(200, {
+          token,
+          user: userObj,
+          tenant: { domain: tenant.domain },
+        }),
+      );
+>>>>>>> c70c6688696591d80553b7c3976ce20c5e731648
   }),
 };
