@@ -18,6 +18,7 @@ import { Role } from "../models/role.model.js";
 import { Permission } from "../models/permission.model.js";
 import { AUDIT_ACTIONS } from "../constants/AUDIT_MESSAGES.js";
 import { createAuditLog } from "../utilities/auditLog/audit.util.js";
+import { TenantModel } from "../models/tenant.model.js";
 
 export const UserController = {
   registerCompany: asyncHandler(async (req, res) => {
@@ -34,17 +35,21 @@ export const UserController = {
       console.log({ tenant });
 
       return await setTenantContext(tenant._id, async () => {
+        const permissionIds = (await Permission.find()).map((p) => p._id);
 
-        const permissionIds = (await Permission.find()).map(p => p._id);
-
-        const [superadminRole] = await Role.create([{
-          name: "SuperAdmin",
-          isSystem: true,
-          description: "The SuperAdmin role has unrestricted access to all modules, features, and permissions across the entire system. This role is system-defined and cannot be modified",
-          permissions: permissionIds,
-          tenantId: tenant._id
-
-        }], {session})
+        const [superadminRole] = await Role.create(
+          [
+            {
+              name: "SuperAdmin",
+              isSystem: true,
+              description:
+                "The SuperAdmin role has unrestricted access to all modules, features, and permissions across the entire system. This role is system-defined and cannot be modified",
+              permissions: permissionIds,
+              tenantId: tenant._id,
+            },
+          ],
+          { session },
+        );
 
         const user = await UserService.create({
           name,
@@ -54,7 +59,7 @@ export const UserController = {
           tenantId: tenant._id,
           session,
           roles: [superadminRole._id],
-          isSuperAdmin:true,
+          isSuperAdmin: true,
         });
 
         const [org] = await OrganizationModel.create(
@@ -82,20 +87,14 @@ export const UserController = {
           oldValue: null,
           tenantId: tenant._id,
           newValue: org,
-          description: `Organization "${org.name}" was created with initial configuration`
-
+          description: `Organization "${org.name}" was created with initial configuration`,
         });
 
         return { user, tenant };
       });
     });
 
-
-
     console.log("Tenant, user, org created");
-    
-    
-    
 
     return res
       .status(201)

@@ -8,28 +8,28 @@ async function seedRBAC() {
   try {
     await mongoose.connect(process.env.MONGO_URI);
     console.log("✅ MongoDB connected");
- 
+
     let inserted = 0;
     let existed = 0;
- 
+
     for (const perm of DEFAULT_PERMISSIONS) {
       const result = await Permission.updateOne(
         { key: perm.key },
         { $setOnInsert: perm },
         { upsert: true },
       );
- 
+
       if (result.upsertedCount === 1) {
         inserted++;
       } else {
         existed++;
       }
     }
- 
+
     console.log("✅ Permissions seeded");
     console.log(`➕ Inserted: ${inserted}`);
     console.log(`♻️ Already existed: ${existed}`);
- 
+
     process.exit(0);
   } catch (error) {
     console.error("❌ RBAC seeding failed:", error);
@@ -37,4 +37,4 @@ async function seedRBAC() {
   }
 }
 
-seedRBAC()
+seedRBAC();
