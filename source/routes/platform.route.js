@@ -37,15 +37,15 @@ PlatformRouter.post("/facebook", async (req, res) => {
 PlatformRouter.post(
   "/publish",
   asyncHandler(async (req, res) => {
-    const { mediaUrls, caption } = req.body;
+    const { mediaUrls, caption, type = "carousel", platforms = [] } = req.body;
 
     const SocialService = createSocialService(
       { tenantId: req.tenant._id },
       retry,
     );
     const result = await SocialService.publish({
-      payload: { mediaUrls, caption, type: "carousel" },
-      platforms: ["instagram", "facebook"],
+      payload: { mediaUrls, caption, type },
+      platforms,
       userId: req.user._id,
       tenantId: req.tenant._id,
     });

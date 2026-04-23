@@ -30,7 +30,6 @@ export const retry = async (
         throw err;
       }
 
-      // optional hook (logging, metrics, etc.)
       if (onRetry) {
         onRetry({
           attempt: attempt + 1,
@@ -66,4 +65,4 @@ const defaultShouldRetry = (err) => {
   return false;
 };
 
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+export const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));

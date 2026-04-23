@@ -2,6 +2,7 @@
 
 import axios from "axios";
 import { ApiError } from "../../utilities/asyncHandler.util.js";
+import { retry, sleep } from "../../utilities/retry.js";
 
 export const createInstagramService = ({ accessToken, pageId }) => {
   if (!accessToken) {
@@ -169,6 +170,7 @@ export const createInstagramService = ({ accessToken, pageId }) => {
 
     const igUserId = await getIGUserId();
 
+    // STEP 1: create container
     const media = await igRequest({
       url: `${base}/${igUserId}/media`,
       method: "POST",
@@ -178,13 +180,33 @@ export const createInstagramService = ({ accessToken, pageId }) => {
       },
     });
 
-    const publish = await igRequest({
-      url: `${base}/${igUserId}/media_publish`,
-      method: "POST",
-      params: {
-        creation_id: media.id,
+    if (!media.id) {
+      throw new ApiError(400, "Instagram media creation failed");
+    }
+
+    // 🔥 STEP 2: WAIT (THIS IS MISSING IN YOUR CODE)
+    await waitForContainer(media.id);
+
+    // OPTIONAL: small buffer (makes it even more stable)
+    await sleep(1000);
+
+    // STEP 3: publish (WITH RETRY)
+    const publish = await retry(
+      () =>
+        igRequest({
+          url: `${base}/${igUserId}/media_publish`,
+          method: "POST",
+          params: {
+            creation_id: media.id,
+          },
+        }),
+      {
+        retries: 3,
+        delay: 1200,
+        shouldRetry: (err) =>
+          err.message?.includes("Media ID is not available"),
       },
-    });
+    );
 
     return {
       platform: "instagram",
@@ -192,7 +214,6 @@ export const createInstagramService = ({ accessToken, pageId }) => {
       postId: publish.id,
     };
   };
-
   // ----------------------------------------
   // 🎞️ CAROUSEL (images + videos)
   // ----------------------------------------
@@ -236,12 +257,10 @@ export const createInstagramService = ({ accessToken, pageId }) => {
       }),
     );
 
+    console.log("Child Containers", childIds);
+
     // STEP 2: wait for videos
-    await Promise.all(
-      mediaUrls.map((m, i) =>
-        m.type === "video" ? waitForContainer(childIds[i]) : Promise.resolve(),
-      ),
-    );
+    await Promise.all(childIds.map((id) => waitForContainer(id)));
 
     // STEP 3: create parent
     const parent = await igRequest({
