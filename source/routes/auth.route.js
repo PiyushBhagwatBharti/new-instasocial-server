@@ -6,4 +6,4 @@ export const AuthRouter = Router();
 
 AuthRouter.post("/registerCompany", UserController.registerCompany);
 AuthRouter.post("/register", tenantResolver, UserController.signup);
-AuthRouter.post("/login", tenantResolver, UserController.login);
+AuthRouter.post("/login", UserController.login);

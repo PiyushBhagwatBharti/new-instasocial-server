@@ -116,10 +116,9 @@ export const createFacebookService = ({ accessToken, pageId }) => {
     if (!mediaUrls || !Array.isArray(mediaUrls) || mediaUrls.length === 0) {
       throw new ApiError(400, "mediaUrls array is required");
     }
-
     // single image → fallback
     if (mediaUrls.length === 1) {
-      return postImage({ imageUrl: mediaUrls[0].url, caption });
+      return postImage({ imageUrl: mediaUrls[0], caption });
     }
 
     // STEP 1: upload all as unpublished

@@ -14,6 +14,7 @@ import {
   setTenantContext,
   tenantContext,
 } from "../utilities/TenantUtils/tenantContext.js";
+import { TenantModel } from "../models/tenant.model.js";
 
 export const UserController = {
   registerCompany: asyncHandler(async (req, res) => {
@@ -65,7 +66,7 @@ export const UserController = {
       .json(
         new ApiResponse(
           201,
-          { user, domain: tenant.domain },
+          { user, tenant: { domain: tenant.domain } },
           "SuperAdmin created",
         ),
       );
@@ -100,7 +101,11 @@ export const UserController = {
   login: asyncHandler(async (req, res) => {
     const { email, password } = req.body;
 
-    const user = await UserRepo.getUser({ email, selectPassword: true });
+    const user = await UserRepo.getUser({
+      email,
+      selectPassword: true,
+      skipTenantCheck: true,
+    });
     if (!user) {
       throw new ApiError(404, USER_CTR_MSG.USER_NOT_FOUND);
     }
@@ -123,9 +128,21 @@ export const UserController = {
       expiresIn: process.env.JWT_EXPIRES,
     });
 
+    const tenant = await TenantModel.findOne({ _id: user.tenantId }).select(
+      "domain",
+    );
+
     const userObj = user.toObject();
     delete userObj.password;
 
-    res.status(200).json(new ApiResponse(200, { token, user: userObj }));
+    res
+      .status(200)
+      .json(
+        new ApiResponse(200, {
+          token,
+          user: userObj,
+          tenant: { domain: tenant.domain },
+        }),
+      );
   }),
 };

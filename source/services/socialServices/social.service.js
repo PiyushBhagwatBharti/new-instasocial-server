@@ -1,14 +1,20 @@
 // services/social.service.js
 import { ApiError } from "../../utilities/asyncHandler.util.js";
 import { PlatformService } from "../Platform.service.js";
-import { mapPlatformToCredentials } from "./credential.mapper.js";
+import {
+  mapPlatformToCredentials,
+  toFacebookPayload,
+  toInstagramPayload,
+} from "./credential.mapper.js";
 import { createFacebookService } from "./facebook.service.js";
 import { createInstagramService } from "./instagram.services.js";
 
 export const createSocialService = ({ tenantId, retry }) => {
-  // ----------------------------------------
-  // 🧠 Platform → Service Map
-  // ----------------------------------------
+  const adapterMap = {
+    facebook: toFacebookPayload,
+    instagram: toInstagramPayload,
+  };
+
   const serviceMap = {
     facebook: createFacebookService,
     instagram: createInstagramService,
@@ -27,7 +33,7 @@ export const createSocialService = ({ tenantId, retry }) => {
   // ----------------------------------------
   // 🎯 Payload Executor
   // ----------------------------------------
-  const execute = async ({ service, payload }) => {
+  const execute = async ({ service, payload, platformPayload }) => {
     const map = {
       text: service.postText,
       image: service.postImage,
@@ -55,11 +61,8 @@ export const createSocialService = ({ tenantId, retry }) => {
     }
 
     // wrap with retry if provided
-    if (retry) {
-      return await retry(() => fn(payload));
-    }
-    console.log(payload);
-    return await fn(payload);
+    if (retry) return await retry(() => fn(platformPayload));
+    return await fn(platformPayload);
   };
 
   const publish = async ({ tenantId, userId, platforms, payload }) => {
@@ -98,8 +101,13 @@ export const createSocialService = ({ tenantId, retry }) => {
           credentials: mapPlatformToCredentials(platformDoc),
         });
 
-        // 3. execute
-        const data = await execute({ service, payload });
+        //3. execute
+        const adapter = adapterMap[platform];
+        if (!adapter)
+          throw new ApiError(400, `No adapter found for: ${platform}`);
+        const platformPayload = adapter(payload); // { type, caption, media[] } → platform-specific shape
+
+        const data = await execute({ service, payload, platformPayload });
 
         return {
           platform: platformDoc,
