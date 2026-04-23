@@ -14,13 +14,9 @@ import {
   setTenantContext,
   tenantContext,
 } from "../utilities/TenantUtils/tenantContext.js";
-<<<<<<< HEAD
 import { Role } from "../models/role.model.js";
 import { Permission } from "../models/permission.model.js";
 import { AUDIT_ACTIONS } from "../constants/AUDIT_MESSAGES.js";
-=======
-import { TenantModel } from "../models/tenant.model.js";
->>>>>>> c70c6688696591d80553b7c3976ce20c5e731648
 
 export const UserController = {
   registerCompany: asyncHandler(async (req, res) => {
@@ -183,7 +179,6 @@ export const UserController = {
     const userObj = user.toObject();
     delete userObj.password;
 
-<<<<<<< HEAD
     createAuditLog({
           req,
           action: AUDIT_ACTIONS.USER_LOGIN,
@@ -196,16 +191,5 @@ export const UserController = {
         });
 
     res.status(200).json(new ApiResponse(200, { token, user: userObj }));
-=======
-    res
-      .status(200)
-      .json(
-        new ApiResponse(200, {
-          token,
-          user: userObj,
-          tenant: { domain: tenant.domain },
-        }),
-      );
->>>>>>> c70c6688696591d80553b7c3976ce20c5e731648
   }),
 };
