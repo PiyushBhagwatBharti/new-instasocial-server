@@ -15,7 +15,32 @@ const originUrl = String(process.env.FRONTEND_URL).split(",");
 console.log({ originUrl });
 
 const corsOptions = {
-  origin: originUrl, // frontend domains
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+
+    // Check if origin is in the allowed list
+    if (originUrl.includes(origin)) {
+      return callback(null, true);
+    }
+
+    // Check if origin matches *.instabooking.in pattern
+    if (/^http:\/\/[\w-]+\.localhost:5173$/.test(origin)) {
+      return callback(null, true);
+    }
+
+    // Check if origin matches *.instabooking.in pattern
+    // if (/^https:\/\/[\w-]+\.instabooking\.in$/.test(origin)) {
+    //   return callback(null, true);
+    // }
+
+    // if (/^https:\/\/[\w-]+\.test.instabooking\.in$/.test(origin)) {
+    //   return callback(null, true);
+    // }
+
+    // Origin not allowed
+    callback(new Error("Not allowed by CORS"));
+  }, // frontend domains
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   credentials: true,
 };

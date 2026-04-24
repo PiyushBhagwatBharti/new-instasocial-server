@@ -90,7 +90,7 @@ export const UserController = {
           description: `Organization "${org.name}" was created with initial configuration`,
         });
 
-        return { user, tenant };
+        return { user, tenant: { domain: tenant.domain } };
       });
     });
 
@@ -192,6 +192,38 @@ export const UserController = {
 
     //     });
 
-    res.status(200).json(new ApiResponse(200, { token, user: userObj }));
+    res.status(200).json(
+      new ApiResponse(200, {
+        token,
+        user: userObj,
+        tenant: { domain: tenant.domain },
+      }),
+    );
+  }),
+
+  getUser: asyncHandler(async (req, res) => {
+    const id = req.user?._id ?? req.params.id;
+
+    if (!id) {
+      throw new ApiError(404, "user not found");
+    }
+    console.log({ id, user: req.user });
+    const user = await UserRepo.getUser({ userId: id });
+    if (!user) {
+      throw new ApiError(404, USER_CTR_MSG.USER_NOT_FOUND);
+    }
+    const tenant = await TenantModel.findOne({ _id: user.tenantId }).select(
+      "domain",
+    );
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          { user, tenant: { domain: tenant.domain } },
+          "user Fetched",
+        ),
+      );
   }),
 };

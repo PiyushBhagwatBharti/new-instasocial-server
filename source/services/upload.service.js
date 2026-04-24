@@ -42,7 +42,7 @@ const uploadObject = async ({
 
     const uploadUrl = await s3.getSignedUrlPromise("putObject", s3Params);
 
-    const fileUrl = `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+    const fileUrl = `http://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
 
     return {
       uploadUrl,
@@ -78,7 +78,7 @@ const deleteObject = async (key) => {
   }
 };
 
-const getPresignedUrl = async (req, res, next) => {
+const getPresignedUrlController = async (req, res, next) => {
   try {
     const {
       fileName,
@@ -111,4 +111,4 @@ const getPresignedUrl = async (req, res, next) => {
   }
 };
 
-export { getPresignedUrl, deleteObject };
+export { getPresignedUrlController as getPresignedUrl, deleteObject };

@@ -1,5 +1,9 @@
 import { Router } from "express";
-import { ApiResponse, asyncHandler } from "../utilities/asyncHandler.util.js";
+import {
+  ApiError,
+  ApiResponse,
+  asyncHandler,
+} from "../utilities/asyncHandler.util.js";
 import { authMiddleware } from "../middleware/auth.middleware.js";
 import { PlatformService } from "../services/Platform.service.js";
 import { createFacebookService } from "../services/socialServices/facebook.service.js";
@@ -10,14 +14,31 @@ export const PlatformRouter = Router();
 PlatformRouter.use(authMiddleware);
 
 PlatformRouter.get(
-  "/connect/facebook",
+  "/connect",
   asyncHandler(async (req, res) => {
-    const state = JSON.stringify({
-      tenantId: req.tenant?._id,
-      userId: req.user?._id,
-    });
-    const url = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${process.env.META_CLIENT_ID}&redirect_uri=${process.env.META_REDIRECT_URI}&state=${encodeURIComponent(state)}&scope=pages_manage_posts,pages_read_engagement,pages_show_list,business_management,instagram_basic,instagram_content_publish`;
-    res.send({ url });
+    const { platform } = req.query;
+    let toRedirect = req.query.toRedirect === "false" ? false : true;
+
+    let url = null;
+    switch (platform) {
+      case "facebook":
+      case "instagram":
+        const state = JSON.stringify({
+          tenantId: req.tenant?._id,
+          userId: req.user?._id,
+        });
+        url = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${process.env.META_CLIENT_ID}&redirect_uri=${process.env.META_REDIRECT_URI}&state=${encodeURIComponent(state)}&scope=pages_manage_posts,pages_read_engagement,pages_show_list,business_management,instagram_basic,instagram_content_publish`;
+        break;
+
+      default:
+        throw new ApiError(400, "invaild platform");
+    }
+
+    if (toRedirect) {
+      return res.redirect(url);
+    } else {
+      return res.send({ url });
+    }
   }),
 );
 
