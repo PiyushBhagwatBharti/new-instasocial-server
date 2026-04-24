@@ -12,20 +12,22 @@ import { uploadImage } from "../utilities/imageUpload.js";
 export const PostController = {
   createPost: asyncHandler(async (req, res) => {
     const {
-      caption,
+      title,
+      content,
       media,
       type,
-      platforms,
-      scheduledAt,
+      selectedPlatformName,
+      scheduledFor,
       timezone = "Asia/Kolkata",
     } = req.body;
 
     if (!type) throw new ApiError(400, "type is required");
-    if (!platforms?.length) throw new ApiError(400, "platforms are required");
-    if (!scheduledAt) throw new ApiError(400, "scheduledAt is required");
+    if (!selectedPlatformName?.length)
+      throw new ApiError(400, "platforms are required");
+    if (!scheduledFor) throw new ApiError(400, "scheduledAt is required");
 
     // must be in the future
-    if (new Date(scheduledAt) <= new Date()) {
+    if (new Date(scheduledFor) <= new Date()) {
       throw new ApiError(400, "scheduledAt must be a future date");
     }
 
@@ -43,13 +45,14 @@ export const PostController = {
     }
 
     const post = await PostModel.create({
+      title,
       tenantId: req.tenant._id,
       userId: req.user._id,
-      caption,
+      caption: content,
       media: resolvedMedia,
       type,
-      platforms,
-      scheduledAt,
+      platforms: selectedPlatformName,
+      scheduledAt: scheduledFor,
       timezone: timezone,
       status: "pending",
     });

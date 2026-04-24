@@ -35,17 +35,21 @@ export const UserController = {
       console.log({ tenant });
 
       return await setTenantContext(tenant._id, async () => {
+        const permissionIds = (await Permission.find()).map((p) => p._id);
 
-        const permissionIds = (await Permission.find()).map(p => p._id);
-
-        const [superadminRole] = await Role.create([{
-          name: "SuperAdmin",
-          isSystem: true,
-          description: "The SuperAdmin role has unrestricted access to all modules, features, and permissions across the entire system. This role is system-defined and cannot be modified",
-          permissions: permissionIds,
-          tenantId: tenant._id
-
-        }], {session})
+        const [superadminRole] = await Role.create(
+          [
+            {
+              name: "SuperAdmin",
+              isSystem: true,
+              description:
+                "The SuperAdmin role has unrestricted access to all modules, features, and permissions across the entire system. This role is system-defined and cannot be modified",
+              permissions: permissionIds,
+              tenantId: tenant._id,
+            },
+          ],
+          { session },
+        );
 
         const user = await UserService.create({
           name,
@@ -55,7 +59,7 @@ export const UserController = {
           tenantId: tenant._id,
           session,
           roles: [superadminRole._id],
-          isSuperAdmin:true,
+          isSuperAdmin: true,
         });
 
         const [org] = await OrganizationModel.create(
@@ -83,20 +87,14 @@ export const UserController = {
           oldValue: null,
           tenantId: tenant._id,
           newValue: org,
-          description: `Organization "${org.name}" was created with initial configuration`
-
+          description: `Organization "${org.name}" was created with initial configuration`,
         });
 
-        return { user, tenant };
+        return { user, tenant: { domain: tenant.domain } };
       });
     });
 
-
-
     console.log("Tenant, user, org created");
-    
-    
-    
 
     return res
       .status(201)
@@ -194,6 +192,38 @@ export const UserController = {
 
     //     });
 
-    res.status(200).json(new ApiResponse(200, { token, user: userObj }));
+    res.status(200).json(
+      new ApiResponse(200, {
+        token,
+        user: userObj,
+        tenant: { domain: tenant.domain },
+      }),
+    );
+  }),
+
+  getUser: asyncHandler(async (req, res) => {
+    const id = req.user?._id ?? req.params.id;
+
+    if (!id) {
+      throw new ApiError(404, "user not found");
+    }
+    console.log({ id, user: req.user });
+    const user = await UserRepo.getUser({ userId: id });
+    if (!user) {
+      throw new ApiError(404, USER_CTR_MSG.USER_NOT_FOUND);
+    }
+    const tenant = await TenantModel.findOne({ _id: user.tenantId }).select(
+      "domain",
+    );
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          { user, tenant: { domain: tenant.domain } },
+          "user Fetched",
+        ),
+      );
   }),
 };

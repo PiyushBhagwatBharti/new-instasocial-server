@@ -17,6 +17,8 @@ export const authMiddleware = async (req, res, next) => {
     // 🔹 2. Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
+    console.log("decoded", decoded);
+
     // 🔹 3. Get user from DB
     const user = await UserModel.findById(decoded._id)
       .populate([
@@ -33,8 +35,9 @@ export const authMiddleware = async (req, res, next) => {
         },
         { path: "excludedPermissions", select: "key" },
       ])
-
       .lean();
+
+    console.log("user", user);
 
     if (!user) {
       throw new ApiError(401, "Invalid token user");
@@ -45,7 +48,12 @@ export const authMiddleware = async (req, res, next) => {
       _id: user._id,
       email: user.email,
       roles: user.roles?.name,
-      permissions:flattenUserPermissions({permissions: user.roles?.permissions, extraPermissions: user.extraPermissions, excludedPermissions:user.excludedPermissions }) || [],
+      permissions:
+        flattenUserPermissions({
+          permissions: user.roles?.permissions,
+          extraPermissions: user.extraPermissions,
+          excludedPermissions: user.excludedPermissions,
+        }) || [],
     };
 
     // 🔹 5. Attach tenant (multi-tenant support)

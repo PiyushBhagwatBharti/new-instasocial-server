@@ -11,6 +11,7 @@
     "start": "nodemon ./server.js"
   },
   "dependencies": {
+    "aws-sdk": "^2.1693.0",
     "axios": "^1.15.1",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
