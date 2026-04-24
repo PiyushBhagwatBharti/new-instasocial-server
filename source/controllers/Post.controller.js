@@ -8,6 +8,7 @@ import {
 import { createAuditLog } from "../utilities/auditLog/audit.util.js";
 import { sluggify } from "../utilities/idGenerators.util.js";
 import { uploadImage } from "../utilities/imageUpload.js";
+import QueryBuilder from "../utilities/queryBuilder.js";
 
 export const PostController = {
   createPost: asyncHandler(async (req, res) => {
@@ -68,15 +69,84 @@ export const PostController = {
 
     //     });
 
-
     res.status(201).json(new ApiResponse(201, { post }, "Post Created"));
   }),
+  // getPosts: asyncHandler(async (req, res) => {
+  //   const { status, platform, from, to, page = 1, limit = 10 } = req.query;
+
+  //   const filter = { tenantId: req.tenant._id };
+
+  //   // filter by status
+  //   if (status) {
+  //     const validStatuses = [
+  //       "draft",
+  //       "pending",
+  //       "processing",
+  //       "published",
+  //       "failed",
+  //       "cancelled",
+  //     ];
+  //     if (!validStatuses.includes(status)) {
+  //       throw new ApiError(400, `Invalid status: ${status}`);
+  //     }
+  //     filter.status = status;
+  //   }
+
+  //   // filter by platform
+  //   if (platform) {
+  //     const validPlatforms = ["facebook", "instagram"];
+  //     if (!validPlatforms.includes(platform)) {
+  //       throw new ApiError(400, `Invalid platform: ${platform}`);
+  //     }
+  //     filter.platforms = { $in: [platform] };
+  //   }
+
+  //   // filter by date range (scheduledAt)
+  //   if (from || to) {
+  //     filter.scheduledAt = {};
+  //     if (from) filter.scheduledAt.$gte = new Date(from);
+  //     if (to) filter.scheduledAt.$lte = new Date(to);
+  //   }
+
+  //   const pageNum = Math.max(1, parseInt(page));
+  //   const limitNum = Math.min(50, Math.max(1, parseInt(limit))); // cap at 50
+  //   const skip = (pageNum - 1) * limitNum;
+
+  //   const [posts, total] = await Promise.all([
+  //     PostModel.find(filter)
+  //       .sort({ scheduledAt: -1 })
+  //       .skip(skip)
+  //       .limit(limitNum)
+  //       .lean(),
+  //     PostModel.countDocuments(filter),
+  //   ]);
+
+  //   res.status(200).json(
+  //     new ApiResponse(
+  //       200,
+  //       {
+  //         posts,
+  //         pagination: {
+  //           total,
+  //           page: pageNum,
+  //           limit: limitNum,
+  //           totalPages: Math.ceil(total / limitNum),
+  //           hasNext: pageNum < Math.ceil(total / limitNum),
+  //           hasPrev: pageNum > 1,
+  //         },
+  //       },
+  //       "Posts fetched",
+  //     ),
+  //   );
+  // }),
+
   getPosts: asyncHandler(async (req, res) => {
-    const { status, platform, from, to, page = 1, limit = 10 } = req.query;
+    const { status, platform } = req.query;
+    const baseFilter = {
+      tenantId: req.tenant._id,
+    };
 
-    const filter = { tenantId: req.tenant._id };
-
-    // filter by status
+    // ── Validate status ──
     if (status) {
       const validStatuses = [
         "draft",
@@ -89,37 +159,41 @@ export const PostController = {
       if (!validStatuses.includes(status)) {
         throw new ApiError(400, `Invalid status: ${status}`);
       }
-      filter.status = status;
+      baseFilter.status = status;
     }
 
-    // filter by platform
+    // ── Validate platform ──
     if (platform) {
       const validPlatforms = ["facebook", "instagram"];
       if (!validPlatforms.includes(platform)) {
         throw new ApiError(400, `Invalid platform: ${platform}`);
       }
-      filter.platforms = { $in: [platform] };
+      baseFilter.platforms = { $in: [platform] };
     }
 
-    // filter by date range (scheduledAt)
-    if (from || to) {
-      filter.scheduledAt = {};
-      if (from) filter.scheduledAt.$gte = new Date(from);
-      if (to) filter.scheduledAt.$lte = new Date(to);
-    }
+    // ── Initialize QueryBuilder ──
+    const query = new QueryBuilder(
+      PostModel.find(baseFilter),
+      req.query,
+      PostModel.schema,
+    )
+      .filter() // dynamic filters (scheduledAt_gte, caption_contains, etc.)
+      .sort() // ?sort=scheduledAt,-createdAt
+      .fields() // ?fields=caption,status
+      .pagination() // ?page=1&limit=10
+      .populate(); // optional
 
-    const pageNum = Math.max(1, parseInt(page));
-    const limitNum = Math.min(50, Math.max(1, parseInt(limit))); // cap at 50
-    const skip = (pageNum - 1) * limitNum;
-
+    // ── Execute queries ──
     const [posts, total] = await Promise.all([
-      PostModel.find(filter)
-        .sort({ scheduledAt: -1 })
-        .skip(skip)
-        .limit(limitNum)
-        .lean(),
-      PostModel.countDocuments(filter),
+      query.query.lean(),
+      PostModel.countDocuments({
+        ...baseFilter,
+        ...query.query.getQuery(), // IMPORTANT: include QB filters in count
+      }),
     ]);
+
+    const pageNum = parseInt(req.query.page) || 1;
+    const limitNum = parseInt(req.query.limit) || 100;
 
     res.status(200).json(
       new ApiResponse(
@@ -139,6 +213,7 @@ export const PostController = {
       ),
     );
   }),
+
   getPost: asyncHandler(async (req, res) => {
     const post = await PostModel.findOne({
       _id: req.params.id,

@@ -5,7 +5,7 @@ const mediaItemSchema = new mongoose.Schema(
   {
     url: { type: String, required: true }, // S3 URL
     type: { type: String, enum: ["image", "video"], required: true },
-    name: { type: String, enum: ["image", "video"], required: true },
+    name: { type: String },
     key: { type: String }, // S3 key (for deletion later)
   },
   { _id: false },
