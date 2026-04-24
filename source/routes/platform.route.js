@@ -5,6 +5,7 @@ import { PlatformService } from "../services/Platform.service.js";
 import { createFacebookService } from "../services/socialServices/facebook.service.js";
 import { createSocialService } from "../services/socialServices/social.service.js";
 import { retry } from "../utilities/retry.js";
+import { PlatformController } from "../controllers/Platform.controller.js";
 
 export const PlatformRouter = Router();
 PlatformRouter.use(authMiddleware);
@@ -53,3 +54,6 @@ PlatformRouter.post(
     return res.status(200).json(new ApiResponse(200, result, "Posts uploaded"));
   }),
 );
+
+PlatformRouter.get("/",PlatformController.getAll);
+PlatformRouter.get("/:platformId", PlatformController.getById);

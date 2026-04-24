@@ -17,7 +17,7 @@ const PlatformSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["active", "expired", "revoked", "error"],
+      enum: ["active", "expired", "revoked", "rejected"],
       default: "active",
     },
 
