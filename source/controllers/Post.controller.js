@@ -1,9 +1,11 @@
+import { AUDIT_ACTIONS } from "../constants/AUDIT_MESSAGES.js";
 import { PostModel } from "../models/post.model.js";
 import {
   ApiError,
   ApiResponse,
   asyncHandler,
 } from "../utilities/asyncHandler.util.js";
+import { createAuditLog } from "../utilities/auditLog/audit.util.js";
 import { sluggify } from "../utilities/idGenerators.util.js";
 import { uploadImage } from "../utilities/imageUpload.js";
 
@@ -51,6 +53,18 @@ export const PostController = {
       timezone: timezone,
       status: "pending",
     });
+
+    // createAuditLog({
+    //       req,
+    //       action: AUDIT_ACTIONS.POST_CREATE,
+    //       entity: `Post: ${user.name}`,
+    //       entityId: user?._id,
+    //       oldValue: null,
+    //       newValue: null,
+    //       description: `User "${newUser.name}" login successfully.`
+
+    //     });
+
 
     res.status(201).json(new ApiResponse(201, { post }, "Post Created"));
   }),

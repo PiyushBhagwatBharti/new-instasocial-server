@@ -18,6 +18,7 @@ import { Role } from "../models/role.model.js";
 import { Permission } from "../models/permission.model.js";
 import { AUDIT_ACTIONS } from "../constants/AUDIT_MESSAGES.js";
 import { createAuditLog } from "../utilities/auditLog/audit.util.js";
+import { TenantModel } from "../models/tenant.model.js";
 
 export const UserController = {
   registerCompany: asyncHandler(async (req, res) => {
