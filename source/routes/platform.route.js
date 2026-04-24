@@ -32,7 +32,7 @@ PlatformRouter.get(
         break;
 
       default:
-        throw new ApiError(400, "invaild platform");
+        throw new ApiError(400, "platform not supported yet");
     }
 
     if (toRedirect) {
@@ -76,5 +76,5 @@ PlatformRouter.post(
   }),
 );
 
-PlatformRouter.get("/",PlatformController.getAll);
+PlatformRouter.get("/", PlatformController.getAll);
 PlatformRouter.get("/:platformId", PlatformController.getById);

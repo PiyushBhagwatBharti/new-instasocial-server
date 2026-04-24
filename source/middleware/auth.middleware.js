@@ -17,8 +17,6 @@ export const authMiddleware = async (req, res, next) => {
     // 🔹 2. Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    console.log("decoded", decoded);
-
     // 🔹 3. Get user from DB
     const user = await UserModel.findById(decoded._id)
       .populate([
@@ -36,8 +34,6 @@ export const authMiddleware = async (req, res, next) => {
         { path: "excludedPermissions", select: "key" },
       ])
       .lean();
-
-    console.log("user", user);
 
     if (!user) {
       throw new ApiError(401, "Invalid token user");
