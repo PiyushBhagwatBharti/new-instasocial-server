@@ -72,6 +72,7 @@ const processPost = async (post) => {
       // all failed → 'failed', all success → 'published'
       // partial → 'published' (results array tells the full story)
       // ----------------------------------------
+      console.log(results);
       const allFailed = results.every((r) => !r.success);
 
       await PostModel.findByIdAndUpdate(post._id, {
