@@ -1,5 +1,6 @@
 import { AUDIT_ACTIONS } from "../constants/AUDIT_MESSAGES.js";
 import { PostModel } from "../models/post.model.js";
+import { PostService } from "../services/post.service.js";
 import {
   ApiError,
   ApiResponse,
@@ -85,74 +86,6 @@ export const PostController = {
       .status(201)
       .json(new ApiResponse(201, { post: postObj }, "Post Created"));
   }),
-  // getPosts: asyncHandler(async (req, res) => {
-  //   const { status, platform, from, to, page = 1, limit = 10 } = req.query;
-
-  //   const filter = { tenantId: req.tenant._id };
-
-  //   // filter by status
-  //   if (status) {
-  //     const validStatuses = [
-  //       "draft",
-  //       "pending",
-  //       "processing",
-  //       "published",
-  //       "failed",
-  //       "cancelled",
-  //     ];
-  //     if (!validStatuses.includes(status)) {
-  //       throw new ApiError(400, `Invalid status: ${status}`);
-  //     }
-  //     filter.status = status;
-  //   }
-
-  //   // filter by platform
-  //   if (platform) {
-  //     const validPlatforms = ["facebook", "instagram"];
-  //     if (!validPlatforms.includes(platform)) {
-  //       throw new ApiError(400, `Invalid platform: ${platform}`);
-  //     }
-  //     filter.platforms = { $in: [platform] };
-  //   }
-
-  //   // filter by date range (scheduledAt)
-  //   if (from || to) {
-  //     filter.scheduledAt = {};
-  //     if (from) filter.scheduledAt.$gte = new Date(from);
-  //     if (to) filter.scheduledAt.$lte = new Date(to);
-  //   }
-
-  //   const pageNum = Math.max(1, parseInt(page));
-  //   const limitNum = Math.min(50, Math.max(1, parseInt(limit))); // cap at 50
-  //   const skip = (pageNum - 1) * limitNum;
-
-  //   const [posts, total] = await Promise.all([
-  //     PostModel.find(filter)
-  //       .sort({ scheduledAt: -1 })
-  //       .skip(skip)
-  //       .limit(limitNum)
-  //       .lean(),
-  //     PostModel.countDocuments(filter),
-  //   ]);
-
-  //   res.status(200).json(
-  //     new ApiResponse(
-  //       200,
-  //       {
-  //         posts,
-  //         pagination: {
-  //           total,
-  //           page: pageNum,
-  //           limit: limitNum,
-  //           totalPages: Math.ceil(total / limitNum),
-  //           hasNext: pageNum < Math.ceil(total / limitNum),
-  //           hasPrev: pageNum > 1,
-  //         },
-  //       },
-  //       "Posts fetched",
-  //     ),
-  //   );
-  // }),
 
   getPosts: asyncHandler(async (req, res) => {
     const { status, platform } = req.query;
@@ -241,6 +174,7 @@ export const PostController = {
 
     res.status(200).json(new ApiResponse(200, { post }, "Post fetched"));
   }),
+
   updatePost: asyncHandler(async (req, res) => {
     const post = await PostModel.findOne({
       postId: req.params.id,
@@ -286,6 +220,7 @@ export const PostController = {
       .status(200)
       .json(new ApiResponse(200, { post: updated }, "post updated"));
   }),
+
   cancelPost: asyncHandler(async (req, res) => {
     const post = await PostModel.findOne({
       postId: req.params.id,
@@ -306,6 +241,37 @@ export const PostController = {
     await post.save();
 
     res.status(200).json(new ApiResponse(200, { post }, "Post canceled"));
+  }),
+
+  publish: asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    console.log({ id });
+
+    const post = await PostModel.findOne({
+      postId: id,
+      tenantId: req.tenant?._id,
+    });
+
+    if (!post) {
+      throw new ApiError(404, "Post not found");
+    }
+
+    if (post.status === "published") {
+      throw new ApiError(400, `Post is already published`);
+    }
+
+    if (post.status === "processing") {
+      throw new ApiError(
+        409,
+        `Please wait, post is being processed for publishing`,
+      );
+    }
+
+    await PostService.publishPost(post);
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, {}, "Post queued for publishing"));
   }),
 };
 
