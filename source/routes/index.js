@@ -7,6 +7,7 @@ import { CallbackRouter } from "./callbacks.route.js";
 import { PostRouter } from "./post.route.js";
 import { JobRouter } from "./job.route.js";
 import { UploadRouter } from "./upload.route.js";
+import { PostTagRouter } from "./postTag.route.js";
 
 const MainRouter = Router();
 
@@ -18,6 +19,7 @@ MainRouter.use(tenantResolver);
 MainRouter.use("/roles", RolesRouter);
 MainRouter.use("/platform", PlatformRouter);
 MainRouter.use("/post", PostRouter);
+MainRouter.use("/tag", PostTagRouter);
 MainRouter.use("/upload", UploadRouter);
 
 export { MainRouter };
