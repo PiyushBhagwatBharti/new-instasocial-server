@@ -109,9 +109,6 @@ export const createFacebookService = ({ accessToken, pageId }) => {
     };
   };
 
-  // ----------------------------------------
-  // 📸 Post Multiple Images (Carousel)
-  // ----------------------------------------
   const postCarousel = async ({ mediaUrls, caption = "" }) => {
     if (!mediaUrls || !Array.isArray(mediaUrls) || mediaUrls.length === 0) {
       throw new ApiError(400, "mediaUrls array is required");
@@ -154,35 +151,61 @@ export const createFacebookService = ({ accessToken, pageId }) => {
     };
   };
 
-  // ----------------------------------------
-  // 📖 Post Story
-  // ----------------------------------------
-  const postStory = async ({ imageUrl }) => {
-    if (!imageUrl) {
-      throw new ApiError(400, "imageUrl is required for story");
+  const postStory = async ({ mediaItems }) => {
+    if (!mediaItems?.length) {
+      throw new ApiError(400, "mediaItems are required for story");
     }
 
-    // STEP 1: upload unpublished
-    const photo = await fbRequest({
-      url: `${base}/${pageId}/photos`,
-      params: {
-        url: imageUrl,
-        published: false,
-      },
-    });
+    const results = [];
 
-    // STEP 2: create story
-    const story = await fbRequest({
-      url: `${base}/${pageId}/photo_stories`,
-      params: {
-        photo_id: photo.id,
-      },
-    });
+    for (const item of mediaItems) {
+      const isVideo = item.type === "video";
+
+      let postId;
+
+      if (isVideo) {
+        // ----------------------------------------
+        // 🎥 Video Story
+        // ----------------------------------------
+        const video = await fbRequest({
+          url: `${base}/${pageId}/video_stories`,
+          params: {
+            file_url: item.url,
+            upload_phase: "finish",
+          },
+        });
+
+        postId = video.post_id;
+      } else {
+        // ----------------------------------------
+        // 🖼️ Photo Story
+        // ----------------------------------------
+        const photo = await fbRequest({
+          url: `${base}/${pageId}/photos`,
+          params: {
+            url: item.url,
+            published: false,
+          },
+        });
+
+        const story = await fbRequest({
+          url: `${base}/${pageId}/photo_stories`,
+          params: {
+            photo_id: photo.id,
+          },
+        });
+
+        postId = story.post_id;
+      }
+
+      results.push(postId);
+    }
 
     return {
       platform: "facebook",
       type: "story",
-      postId: story.post_id,
+      postId: results[0], // primary
+      allPostIds: results, // all
     };
   };
 

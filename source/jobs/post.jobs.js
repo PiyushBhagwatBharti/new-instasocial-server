@@ -11,8 +11,8 @@ export const runPostJob = async () => {
   // 1. Fetch all due pending posts
   // ----------------------------------------
   const posts = await PostModel.find({
-    status: { $in: ["pending", "failed"] },
-    // scheduledAt: { $lte: new Date() },
+    status: { $in: ["pending"] },
+    scheduledAt: { $lte: new Date() },
   })
     .setOptions({ skipTenant: true })
     .lean();

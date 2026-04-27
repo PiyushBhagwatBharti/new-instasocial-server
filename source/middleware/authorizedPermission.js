@@ -6,8 +6,6 @@ export const authorizePermissions = (...requiredPermissions) => {
     try {
       const user = req.user;
 
-      console.log({ user });
-
       if (!user) {
         return next(new ApiError(401, COMMON_MESSAGES.UNAUTHORIZED));
       }
@@ -20,8 +18,6 @@ export const authorizePermissions = (...requiredPermissions) => {
        */
 
       const userPermissions = new Set(user.permissions.map((p) => p.key));
-
-      console.log({ userPermissions });
 
       // 🔹 4. Check required permissions (AND logic)
       const missingPermissions = requiredPermissions.filter(

@@ -66,7 +66,10 @@ export const PostController = {
       return { post };
     });
 
-    console.log({ post });
+    const postObj = post.toObject();
+    console.log({ post: postObj });
+
+    delete postObj._id;
 
     createAuditLog({
       req,
@@ -78,7 +81,9 @@ export const PostController = {
       description: `User "${req.user?.name}" created post ${postId}.`,
     });
 
-    res.status(201).json(new ApiResponse(201, { post }, "Post Created"));
+    res
+      .status(201)
+      .json(new ApiResponse(201, { post: postObj }, "Post Created"));
   }),
   // getPosts: asyncHandler(async (req, res) => {
   //   const { status, platform, from, to, page = 1, limit = 10 } = req.query;
@@ -208,7 +213,10 @@ export const PostController = {
       new ApiResponse(
         200,
         {
-          posts,
+          posts: posts.map((p) => {
+            delete p._id;
+            return p;
+          }),
           pagination: {
             total,
             page: pageNum,

@@ -7,6 +7,7 @@ import { errorHandler } from "./middleware/error.handler.js";
 import { config } from "dotenv";
 import { tenantResolver } from "./middleware/TenantResolver.js";
 import { rateLimiter } from "./middleware/rateLimiter.js";
+import cronJobs from "./jobs/index.cron.js";
 
 config();
 
@@ -45,6 +46,7 @@ const corsOptions = {
   credentials: true,
 };
 
+cronJobs.start();
 app.use(cors(corsOptions));
 app.use(rateLimiter);
 

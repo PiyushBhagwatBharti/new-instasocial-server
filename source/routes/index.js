@@ -11,6 +11,11 @@ import { PostTagRouter } from "./postTag.route.js";
 
 const MainRouter = Router();
 
+MainRouter.use((req, res, next) => {
+  console.log(`[${req.method} REQUEST] for api${req.url}`);
+  next();
+});
+
 MainRouter.use("/callback", CallbackRouter);
 MainRouter.use("/job", JobRouter);
 

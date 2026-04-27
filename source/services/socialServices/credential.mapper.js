@@ -76,7 +76,7 @@ export const toInstagramPayload = ({ type, caption, media }) => {
       return { videoUrl: media[0].url, caption };
 
     case "story":
-      return { imageUrl: media[0].url };
+      return { mediaItems: media.map((m) => ({ url: m.url, type: m.type })) };
 
     case "carousel":
       return {
