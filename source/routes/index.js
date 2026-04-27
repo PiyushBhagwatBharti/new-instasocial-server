@@ -15,6 +15,7 @@ MainRouter.use("/job", JobRouter);
 
 MainRouter.use("/auth", AuthRouter);
 MainRouter.use(tenantResolver);
+
 MainRouter.use("/roles", RolesRouter);
 MainRouter.use("/platform", PlatformRouter);
 MainRouter.use("/post", PostRouter);

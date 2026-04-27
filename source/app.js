@@ -7,6 +7,8 @@ import { errorHandler } from "./middleware/error.handler.js";
 import { config } from "dotenv";
 import { tenantResolver } from "./middleware/TenantResolver.js";
 import { rateLimiter } from "./middleware/rateLimiter.js";
+import { requestContextMiddleware } from "./middleware/request-context.middleware.js";
+import { requestLoggerMiddleware } from "./middleware/request-logger.middleware.js";
 
 config();
 
@@ -44,6 +46,10 @@ const corsOptions = {
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   credentials: true,
 };
+
+app.use(requestContextMiddleware);
+app.use(requestLoggerMiddleware);
+
 
 app.use(cors(corsOptions));
 app.use(rateLimiter);
