@@ -3,6 +3,7 @@ const require = createRequire(import.meta.url);
 const AWS = require("aws-sdk");
 import { ApiError, ApiResponse } from "../utilities/asyncHandler.util.js";
 import { sluggify } from "../utilities/idGenerators.util.js";
+import path from "path";
 
 // 🔹 S3 Instance
 const s3 = new AWS.S3({
@@ -26,13 +27,18 @@ const uploadObject = async ({
   isPublic = true,
 }) => {
   try {
-    const key = `${folder}/${Date.now()}-${sluggify(fileName)}`;
+    const ext = path.extname(fileName); // e.g. ".jpg"
+    const nameWithoutExt = path.basename(fileName, ext);
+    const key = `${folder}/${Date.now()}-${sluggify(nameWithoutExt)}${ext}`;
+
+    console.log({ key, fileType, fileName });
 
     const s3Params = {
       Bucket: process.env.AWS_BUCKET_NAME,
       Key: key,
       ContentType: fileType,
       Expires: 60 * 5, // signed URL expiry (seconds)
+      // ACL: "public-read",
     };
 
     // 👇 only add ACL if public
@@ -42,7 +48,8 @@ const uploadObject = async ({
 
     const uploadUrl = await s3.getSignedUrlPromise("putObject", s3Params);
 
-    const fileUrl = `http://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+    const fileUrl = `https://s3.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_BUCKET_NAME}/${key}`;
+    // const fileUrl = `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
 
     return {
       uploadUrl,

@@ -31,6 +31,10 @@ export const createInstagramService = ({ accessToken, pageId }) => {
 
       return res.data;
     } catch (err) {
+      console.log(
+        "[IG Full Error]",
+        JSON.stringify(err.response?.data, null, 2),
+      );
       const igError = err.response?.data?.error;
 
       if (igError) {
@@ -71,6 +75,8 @@ export const createInstagramService = ({ accessToken, pageId }) => {
         url: `${base}/${containerId}`,
         params: { fields: "status_code" },
       });
+
+      console.log(`[IG Container ${containerId}] status: ${data.status_code}`); // 👈 add this
 
       const status = data.status_code;
 
@@ -169,18 +175,19 @@ export const createInstagramService = ({ accessToken, pageId }) => {
     }
 
     const igUserId = await getIGUserId();
-
+    const requestParams = {
+      image_url: imageUrl,
+      caption,
+    };
     console.log("Inst details of post:", { imageUrl, caption, igUserId });
 
     // STEP 1: create container
     const media = await igRequest({
+      //thrws error on this call
       url: `${base}/${igUserId}/media`,
       type: "photo",
       method: "POST",
-      params: {
-        image_url: imageUrl,
-        caption,
-      },
+      params: requestParams,
     });
 
     if (!media.id) {

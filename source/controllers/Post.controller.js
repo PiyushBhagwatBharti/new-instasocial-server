@@ -68,7 +68,6 @@ export const PostController = {
 
     //     });
 
-
     res.status(201).json(new ApiResponse(201, { post }, "Post Created"));
   }),
   getPosts: asyncHandler(async (req, res) => {
@@ -158,11 +157,12 @@ export const PostController = {
     if (!post) throw new ApiError(404, "Post not found");
 
     // only pending/draft posts can be edited
-    if (!["pending", "draft"].includes(post.status)) {
+    if (!["pending", "draft", "failed"].includes(post.status)) {
       throw new ApiError(400, `Cannot edit a post with status: ${post.status}`);
     }
-
-    const { caption, media, type, platforms, scheduledAt, timezone } = req.body;
+    const mappedBody = mapUpdatePostPayload(req.body);
+    const { caption, media, type, platforms, scheduledAt, timezone } =
+      mappedBody;
 
     // if rescheduling, must be future
     if (scheduledAt && new Date(scheduledAt) <= new Date()) {
@@ -233,4 +233,15 @@ const buildMediaFromFiles = async (files, folder) => {
       };
     }),
   );
+};
+
+const mapUpdatePostPayload = (body) => {
+  return {
+    caption: body.content,
+    media: body.media,
+    type: body.type,
+    platforms: body.selectedPlatformName,
+    scheduledAt: body.sheduledFor,
+    timezone: body.timezone,
+  };
 };
