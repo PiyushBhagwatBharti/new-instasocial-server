@@ -32,6 +32,11 @@ const postSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    postId: {
+      type: String,
+      required: true,
+      unique: true,
+    },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

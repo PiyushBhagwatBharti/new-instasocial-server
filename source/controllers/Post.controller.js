@@ -6,8 +6,9 @@ import {
   asyncHandler,
 } from "../utilities/asyncHandler.util.js";
 import { createAuditLog } from "../utilities/auditLog/audit.util.js";
-import { sluggify } from "../utilities/idGenerators.util.js";
+import { IdGenerators, sluggify } from "../utilities/idGenerators.util.js";
 import { uploadImage } from "../utilities/imageUpload.js";
+import { withRetrySession } from "../utilities/session.utils.js";
 
 export const PostController = {
   createPost: asyncHandler(async (req, res) => {
@@ -31,8 +32,6 @@ export const PostController = {
       throw new ApiError(400, "scheduledAt must be a future date");
     }
 
-    const domain = req.tenant.domain;
-
     let resolvedMedia = [];
 
     if (media && media.length > 0) {
@@ -44,29 +43,37 @@ export const PostController = {
       throw new ApiError(400, `media or files are required for type: ${type}`);
     }
 
-    const post = await PostModel.create({
-      title,
-      tenantId: req.tenant._id,
-      userId: req.user._id,
-      caption: content,
-      media: resolvedMedia,
-      type,
-      platforms: selectedPlatformName,
-      scheduledAt: scheduledFor,
-      timezone: timezone,
-      status: "pending",
+    const postId = IdGenerators.randomText({ len: 10, type: "alpha" });
+
+    const { post } = await withRetrySession(async (session) => {
+      const post = await PostModel.create({
+        title,
+        postId,
+        tenantId: req.tenant._id,
+        userId: req.user._id,
+        caption: content,
+        media: resolvedMedia,
+        type,
+        platforms: selectedPlatformName,
+        scheduledAt: scheduledFor,
+        timezone: timezone,
+        status: "pending",
+      });
+
+      return { post };
     });
 
-    // createAuditLog({
-    //       req,
-    //       action: AUDIT_ACTIONS.POST_CREATE,
-    //       entity: `Post: ${user.name}`,
-    //       entityId: user?._id,
-    //       oldValue: null,
-    //       newValue: null,
-    //       description: `User "${newUser.name}" login successfully.`
+    console.log({ post });
 
-    //     });
+    createAuditLog({
+      req,
+      action: AUDIT_ACTIONS.POST_CREATE,
+      entity: `Post: ${postId}`,
+      entityId: post?._id,
+      oldValue: null,
+      newValue: post,
+      description: `User "${req.user?.name}" created post ${postId}.`,
+    });
 
     res.status(201).json(new ApiResponse(201, { post }, "Post Created"));
   }),
@@ -140,8 +147,8 @@ export const PostController = {
   }),
   getPost: asyncHandler(async (req, res) => {
     const post = await PostModel.findOne({
-      _id: req.params.id,
-      tenantId: req.tenant._id, // tenant scoped — can't see other tenant's posts
+      postId: req.params.id,
+      tenantId: req.tenant._id,
     }).lean();
 
     if (!post) throw new ApiError(404, "Post not found");
@@ -150,13 +157,12 @@ export const PostController = {
   }),
   updatePost: asyncHandler(async (req, res) => {
     const post = await PostModel.findOne({
-      _id: req.params.id,
+      postId: req.params.id,
       tenantId: req.tenant._id,
     });
 
     if (!post) throw new ApiError(404, "Post not found");
 
-    // only pending/draft posts can be edited
     if (!["pending", "draft", "failed"].includes(post.status)) {
       throw new ApiError(400, `Cannot edit a post with status: ${post.status}`);
     }
@@ -196,7 +202,7 @@ export const PostController = {
   }),
   cancelPost: asyncHandler(async (req, res) => {
     const post = await PostModel.findOne({
-      _id: req.params.id,
+      postId: req.params.id,
       tenantId: req.tenant._id,
     });
 

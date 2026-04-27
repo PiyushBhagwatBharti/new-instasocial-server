@@ -49,7 +49,7 @@ export const retry = async (
   }
 };
 
-const defaultShouldRetry = (err) => {
+export const defaultShouldRetry = (err) => {
   // Network errors
   if (!err.response) return true;
 
