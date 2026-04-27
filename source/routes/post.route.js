@@ -41,7 +41,6 @@ PostRouter.get(
  */
 PostRouter.patch(
   "/:id",
-  authMiddleware,
   authorizePermissions("posts.update"),
   // upload.array("files"),
   PostController.updatePost
