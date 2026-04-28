@@ -51,10 +51,6 @@ const corsOptions = {
 app.use(requestContextMiddleware);
 app.use(requestLoggerMiddleware);
 
-
-app.use(requestContextMiddleware);
-app.use(requestLoggerMiddleware);
-
 cronJobs.start();
 app.use(cors(corsOptions));
 app.use(rateLimiter);
