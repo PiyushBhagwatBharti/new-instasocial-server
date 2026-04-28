@@ -51,7 +51,7 @@ export const PlatformController = {
           userId: req.user?._id,
         });
         const scope =
-          "pages_manage_posts,pages_read_engagement,pages_show_list,business_management,instagram_basic,instagram_content_publish,pages_manage_engagement";
+          "pages_manage_posts,pages_read_engagement,pages_show_list,business_management,instagram_basic,instagram_content_publish,pages_manage_engagement,leads_retrieval,pages_manage_metadata,ads_management";
 
         url = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${process.env.META_CLIENT_ID}&redirect_uri=${process.env.META_REDIRECT_URI}&state=${encodeURIComponent(state)}&scope=${scope}`;
         break;
