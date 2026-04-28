@@ -46,7 +46,11 @@ const postSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
-
+    tags: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: "PostTags",
+      default: [],
+    },
     caption: { type: String, default: "" },
     media: [mediaItemSchema], // normalized shape
     type: {

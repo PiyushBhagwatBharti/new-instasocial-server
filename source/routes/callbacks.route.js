@@ -41,6 +41,6 @@ CallbackRouter.get(
         return { facebookPlatform, instaPlatform };
       },
     );
-    res.send({ tenant, pageId, facebookPlatform, instaPlatform });
+    res.redirect(`http://${tenant.domain}.localhost:5173/home/`);
   }),
 );

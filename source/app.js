@@ -9,6 +9,7 @@ import { tenantResolver } from "./middleware/TenantResolver.js";
 import { rateLimiter } from "./middleware/rateLimiter.js";
 import { requestContextMiddleware } from "./middleware/request-context.middleware.js";
 import { requestLoggerMiddleware } from "./middleware/request-logger.middleware.js";
+import cronJobs from "./jobs/index.cron.js";
 
 config();
 
@@ -51,6 +52,10 @@ app.use(requestContextMiddleware);
 app.use(requestLoggerMiddleware);
 
 
+app.use(requestContextMiddleware);
+app.use(requestLoggerMiddleware);
+
+cronJobs.start();
 app.use(cors(corsOptions));
 app.use(rateLimiter);
 

@@ -12,11 +12,9 @@ PostRouter.use(authMiddleware);
 PostRouter.post(
   "/",
   authorizePermissions("posts.create"), // or "posts.read"
-  upload.array("files", 10),
   jsonParser("platforms"),
   PostController.createPost,
 );
-
 
 /**
  *  Get All Posts (with filters + pagination)
@@ -24,7 +22,7 @@ PostRouter.post(
 PostRouter.get(
   "/",
   authorizePermissions("posts.read"),
-  PostController.getPosts
+  PostController.getPosts,
 );
 
 /**
@@ -33,7 +31,7 @@ PostRouter.get(
 PostRouter.get(
   "/:id",
   authorizePermissions("posts.read"),
-  PostController.getPost
+  PostController.getPost,
 );
 
 /**
@@ -42,8 +40,13 @@ PostRouter.get(
 PostRouter.patch(
   "/:id",
   authorizePermissions("posts.update"),
-  // upload.array("files"),
-  PostController.updatePost
+  PostController.updatePost,
+);
+
+PostRouter.post(
+  "/:id/publish",
+  authorizePermissions("posts.update"),
+  PostController.publish,
 );
 
 /**
@@ -52,5 +55,5 @@ PostRouter.patch(
 PostRouter.patch(
   "/:id/cancel",
   authorizePermissions("posts.cancel"),
-  PostController.cancelPost
+  PostController.cancelPost,
 );

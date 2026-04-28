@@ -69,14 +69,16 @@ export const createInstagramService = ({ accessToken, pageId }) => {
   // ----------------------------------------
   // ⏳ Polling Helper (for video/reels/carousel)
   // ----------------------------------------
-  const waitForContainer = async (containerId, retries = 40) => {
+  const waitForContainer = async (containerId, retries = 80) => {
     for (let i = 0; i < retries; i++) {
       const data = await igRequest({
         url: `${base}/${containerId}`,
         params: { fields: "status_code" },
       });
 
-      console.log(`[IG Container ${containerId}] status: ${data.status_code}`); // 👈 add this
+      console.log(
+        `[IG Container ${containerId}] (${i + 1}) status: ${data.status_code}`,
+      ); // 👈 add this
 
       const status = data.status_code;
 
@@ -135,37 +137,60 @@ export const createInstagramService = ({ accessToken, pageId }) => {
     };
   };
 
+  const postVideo = async ({
+    videoUrl,
+    caption = "",
+    shareToFeed = true,
+    thumbOffset,
+  }) => {
+    return await postReel({ videoUrl, caption, shareToFeed, thumbOffset });
+  };
+
   // ----------------------------------------
   // 📖 STORY
   // ----------------------------------------
-  const postStory = async ({ imageUrl }) => {
-    if (!imageUrl) {
-      throw new ApiError(400, "imageUrl is required");
-    }
-
+  const postStory = async ({ mediaItems }) => {
     const igUserId = await getIGUserId();
 
-    const container = await igRequest({
-      url: `${base}/${igUserId}/media`,
-      method: "POST",
-      params: {
-        image_url: imageUrl,
-        media_type: "STORIES",
-      },
-    });
+    // normalize — either single item or array
+    const items = mediaItems;
 
-    const publish = await igRequest({
-      url: `${base}/${igUserId}/media_publish`,
-      method: "POST",
-      params: {
-        creation_id: container.id,
-      },
-    });
+    const results = [];
+
+    for (const item of items) {
+      const isVideo = item.type === "video";
+
+      const container = await igRequest({
+        url: `${base}/${igUserId}/media`,
+        method: "POST",
+        params: {
+          media_type: "STORIES",
+          ...(isVideo ? { video_url: item.url } : { image_url: item.url }),
+        },
+      });
+
+      if (!container.id) {
+        throw new ApiError(400, "Instagram story container creation failed");
+      }
+
+      if (isVideo) {
+        await waitForContainer(container.id);
+      }
+
+      const publish = await igRequest({
+        url: `${base}/${igUserId}/media_publish`,
+        method: "POST",
+        params: { creation_id: container.id },
+      });
+
+      results.push(publish.id);
+    }
 
     return {
       platform: "instagram",
       type: "story",
-      postId: publish.id,
+      postId: results[0], // primary one
+      allPostIds: results, // all of them
     };
   };
 
@@ -307,5 +332,6 @@ export const createInstagramService = ({ accessToken, pageId }) => {
     postStory,
     postImage,
     postCarousel,
+    postVideo,
   };
 };
