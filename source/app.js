@@ -10,6 +10,7 @@ import { rateLimiter } from "./middleware/rateLimiter.js";
 import { requestContextMiddleware } from "./middleware/request-context.middleware.js";
 import { requestLoggerMiddleware } from "./middleware/request-logger.middleware.js";
 import cronJobs from "./jobs/index.cron.js";
+import helmet from "helmet";
 
 config();
 
@@ -53,6 +54,11 @@ app.use(requestLoggerMiddleware);
 
 cronJobs.start();
 app.use(cors(corsOptions));
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  })
+);
 app.use(rateLimiter);
 
 connectDB();

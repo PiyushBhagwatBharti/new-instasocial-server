@@ -4,6 +4,8 @@ import { authMiddleware } from "../middleware/auth.middleware.js";
 import { upload } from "../middleware/uploadFile.middleware.js";
 import { jsonParser } from "../utilities/parseFromJson.js";
 import { authorizePermissions } from "../middleware/authorizedPermission.js";
+import { createPostSchema, getPostsSchema, updatePostSchema } from "../validations/post.validation.js";
+import {zod_validate } from "../middleware/validate.middleware.js";
 
 export const PostRouter = Router();
 
@@ -13,6 +15,7 @@ PostRouter.post(
   "/",
   authorizePermissions("posts.create"), // or "posts.read"
   jsonParser("platforms"),
+  zod_validate(createPostSchema),
   PostController.createPost,
 );
 
@@ -22,6 +25,7 @@ PostRouter.post(
 PostRouter.get(
   "/",
   authorizePermissions("posts.read"),
+  // zod_validate(getPostsSchema,"query"),
   PostController.getPosts,
 );
 
@@ -40,6 +44,7 @@ PostRouter.get(
 PostRouter.patch(
   "/:id",
   authorizePermissions("posts.update"),
+  zod_validate(updatePostSchema),
   PostController.updatePost,
 );
 
