@@ -19,6 +19,7 @@ import { Permission } from "../models/permission.model.js";
 import { AUDIT_ACTIONS } from "../constants/AUDIT_MESSAGES.js";
 import { createAuditLog } from "../utilities/auditLog/audit.util.js";
 import { TenantModel } from "../models/tenant.model.js";
+import { logger } from "../utilities/logger/pino.logger.js";
 
 export const UserController = {
   registerCompany: asyncHandler(async (req, res) => {
@@ -180,6 +181,31 @@ export const UserController = {
 
     const userObj = user.toObject();
     delete userObj.password;
+
+
+    
+
+    logger.info(
+      {
+        module: "AUTH @2",
+        method: req.method,
+        url: req.originalUrl,
+      },
+      "Login started",
+    );
+
+    // req.logger.info(
+    //   {
+    //     module: "AUTH",
+    //     method: req.method,
+    //     url: req.originalUrl,
+    //     persist:true,// it will store in DB if persist is true else no way
+    //   },
+    //   "Login started",
+    // );
+
+    // req.logger.info({ module: "POST" }, "User login successfully",true);
+    // await req.logger.info({ persist: true }, "Login failed")
 
     // createAuditLog({
     //       req,

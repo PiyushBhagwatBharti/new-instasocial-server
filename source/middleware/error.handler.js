@@ -1,6 +1,6 @@
 import { ApiError } from "../utilities/asyncHandler.util.js";
 
-export const errorHandler = (err, req, res, next) => {
+export const errorHandler = async (err, req, res, next) => {
   let error = err;
   if (!(error instanceof ApiError)) {
     error = new ApiError(500, error.message || "Internal Server Error");
@@ -13,6 +13,23 @@ export const errorHandler = (err, req, res, next) => {
     path: req.originalUrl ?? null,
     method: req.method ?? null,
   });
+
+  const shouldPersist = error.statusCode >= 500 || error.persist === true;
+
+  await req.logger.error(
+    {
+      module: "GLOBAL_ERROR",
+      error: err,
+      persist: shouldPersist,
+      metadata: {
+        statusCode: error.statusCode,
+        errors: error.errors || [],
+      },
+      url: req.originalUrl ?? null,
+      method: req.method ?? null,
+    },
+    error.message,
+  );
 
   res.status(error.statusCode).json({
     success: false,

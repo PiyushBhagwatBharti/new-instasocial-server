@@ -87,83 +87,158 @@ export const PostController = {
       .json(new ApiResponse(201, { post: postObj }, "Post Created"));
   }),
 
+  // getPosts: asyncHandler(async (req, res) => {
+  //   const { status, platform } = req.query;
+  //   const baseFilter = {
+  //     tenantId: req.tenant._id,
+  //   };
+
+  //   // ── Validate status ──
+  //   if (status) {
+  //     const validStatuses = [
+  //       "draft",
+  //       "pending",
+  //       "processing",
+  //       "published",
+  //       "failed",
+  //       "cancelled",
+  //     ];
+  //     if (!validStatuses.includes(status)) {
+  //       throw new ApiError(400, `Invalid status: ${status}`);
+  //     }
+  //     baseFilter.status = status;
+  //   }
+
+  //   // ── Validate platform ──
+  //   if (platform) {
+  //     const validPlatforms = ["facebook", "instagram"];
+  //     if (!validPlatforms.includes(platform)) {
+  //       throw new ApiError(400, `Invalid platform: ${platform}`);
+  //     }
+  //     baseFilter.platforms = { $in: [platform] };
+  //   }
+
+  //   // ── Initialize QueryBuilder ──
+  //   const query = new QueryBuilder(
+  //     PostModel.find(baseFilter),
+  //     req.query,
+  //     PostModel.schema,
+  //   )
+  //     .filter() // dynamic filters (scheduledAt_gte, caption_contains, etc.)
+  //     .sort() // ?sort=scheduledAt,-createdAt
+  //     .fields() // ?fields=caption,status
+  //     .pagination() // ?page=1&limit=10
+  //     .populate(); // optional
+
+  //   // ── Execute queries ──
+  //   const [posts, total] = await Promise.all([
+  //     query.query.lean(),
+  //     PostModel.countDocuments({
+  //       ...baseFilter,
+  //       ...query.query.getQuery(), // IMPORTANT: include QB filters in count
+  //     }),
+  //   ]);
+
+  //   const pageNum = parseInt(req.query.page) || 1;
+  //   const limitNum = parseInt(req.query.limit) || 100;
+
+  //   res.status(200).json(
+  //     new ApiResponse(
+  //       200,
+  //       {
+  //         posts: posts.map((p) => {
+  //           delete p._id;
+  //           return p;
+  //         }),
+  //         pagination: {
+  //           total,
+  //           page: pageNum,
+  //           limit: limitNum,
+  //           totalPages: Math.ceil(total / limitNum),
+  //           hasNext: pageNum < Math.ceil(total / limitNum),
+  //           hasPrev: pageNum > 1,
+  //         },
+  //       },
+  //       "Posts fetched",
+  //     ),
+  //   );
+  // }),
+
   getPosts: asyncHandler(async (req, res) => {
-    const { status, platform } = req.query;
-    const baseFilter = {
-      tenantId: req.tenant._id,
-    };
+  const { status, platform } = req.query;
+  const baseFilter = { tenantId: req.tenant._id };
 
-    // ── Validate status ──
-    if (status) {
-      const validStatuses = [
-        "draft",
-        "pending",
-        "processing",
-        "published",
-        "failed",
-        "cancelled",
-      ];
-      if (!validStatuses.includes(status)) {
-        throw new ApiError(400, `Invalid status: ${status}`);
-      }
-      baseFilter.status = status;
+  // ── Validate & apply status ──────────────────────────────────────────────
+  if (status) {
+    const validStatuses = ["draft", "pending", "processing", "published", "failed", "cancelled"];
+    if (!validStatuses.includes(status)) {
+      throw new ApiError(400, `Invalid status: ${status}`);
     }
+    baseFilter.status = status;
+  }
 
-    // ── Validate platform ──
-    if (platform) {
-      const validPlatforms = ["facebook", "instagram"];
-      if (!validPlatforms.includes(platform)) {
-        throw new ApiError(400, `Invalid platform: ${platform}`);
-      }
-      baseFilter.platforms = { $in: [platform] };
+  // ── Validate & apply platform ────────────────────────────────────────────
+  if (platform) {
+    const validPlatforms = ["facebook", "instagram"];
+    if (!validPlatforms.includes(platform)) {
+      throw new ApiError(400, `Invalid platform: ${platform}`);
     }
+    baseFilter.platforms = { $in: [platform] };
+  }
 
-    // ── Initialize QueryBuilder ──
-    const query = new QueryBuilder(
-      PostModel.find(baseFilter),
-      req.query,
-      PostModel.schema,
-    )
-      .filter() // dynamic filters (scheduledAt_gte, caption_contains, etc.)
-      .sort() // ?sort=scheduledAt,-createdAt
-      .fields() // ?fields=caption,status
-      .pagination() // ?page=1&limit=10
-      .populate(); // optional
+  // ── Strip manually-handled keys so QueryBuilder doesn't re-process them ──
+  // Without this, QB will try to filter on "status" and "platform" again
+  // from req.query, conflicting with the baseFilter conditions above.
+  const { status: _s, platform: _p, ...qbQuery } = req.query;
 
-    // ── Execute queries ──
-    const [posts, total] = await Promise.all([
-      query.query.lean(),
-      PostModel.countDocuments({
-        ...baseFilter,
-        ...query.query.getQuery(), // IMPORTANT: include QB filters in count
-      }),
-    ]);
+  // ── Build query ──────────────────────────────────────────────────────────
+  const qb = new QueryBuilder(
+    PostModel.find(baseFilter),
+    qbQuery,           // <-- pass stripped query, not raw req.query
+    PostModel.schema,
+  )
+    .filter()          // ?scheduledAt__gte=2024-01-01&caption__contains=sale
+    .sort()            // ?sort=scheduledAt,-createdAt
+    .fields()          // ?fields=caption,status,scheduledAt
+    .pagination()      // ?page=1&limit=20
+    .populate();       // ?populate=author
 
-    const pageNum = parseInt(req.query.page) || 1;
-    const limitNum = parseInt(req.query.limit) || 100;
+  // ── Resolve pagination values (respect the same cap as QB) ───────────────
+  const MAX_LIMIT = 500;
+  const page  = Math.max(1, parseInt(req.query.page,  10) || 1);
+  const limit = Math.min(Math.max(1, parseInt(req.query.limit, 10) || 100), MAX_LIMIT);
 
-    res.status(200).json(
-      new ApiResponse(
-        200,
-        {
-          posts: posts.map((p) => {
-            delete p._id;
-            return p;
-          }),
-          pagination: {
-            total,
-            page: pageNum,
-            limit: limitNum,
-            totalPages: Math.ceil(total / limitNum),
-            hasNext: pageNum < Math.ceil(total / limitNum),
-            hasPrev: pageNum > 1,
-          },
+  // ── Execute ──────────────────────────────────────────────────────────────
+  // getQuery() already contains tenantId + baseFilter + QB dynamic filters,
+  // so no need to spread baseFilter again.
+  const builtQuery = qb.query.getQuery();
+
+  const [posts, total] = await Promise.all([
+    qb.query.lean(),
+    PostModel.countDocuments(builtQuery),
+  ]);
+
+  // ── Shape response ───────────────────────────────────────────────────────
+  const totalPages = Math.ceil(total / limit);
+
+  res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        posts: posts.map(({ _id, __v, ...rest }) => rest), // no mutation
+        pagination: {
+          total,
+          page,
+          limit,
+          totalPages,
+          hasNext: page < totalPages,
+          hasPrev: page > 1,
         },
-        "Posts fetched",
-      ),
-    );
-  }),
-
+      },
+      "Posts fetched",
+    ),
+  );
+}),
   getPost: asyncHandler(async (req, res) => {
     const post = await PostModel.findOne({
       postId: req.params.id,
