@@ -12,7 +12,14 @@ const PlatformSchema = new mongoose.Schema(
     // ── Platform Identity ───────────────────────────
     platform: {
       type: String,
-      enum: ["facebook", "instagram", "linkedin", "youtube", "twitter"],
+      enum: [
+        "facebook",
+        "instagram",
+        "linkedin",
+        "youtube",
+        "twitter",
+        "whatsapp",
+      ],
       required: true,
     },
     status: {

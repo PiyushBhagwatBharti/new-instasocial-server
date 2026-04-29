@@ -9,10 +9,6 @@ export const PostService = {
 
     setTenantContext(post.tenantId, async () => {
       try {
-        // ----------------------------------------
-        // Step 1: flip to 'processing' immediately
-        // so next cron run doesn't pick it up again
-        // ----------------------------------------
         await PostModel.findByIdAndUpdate(post._id, {
           $set: {
             status: "processing",
@@ -20,9 +16,6 @@ export const PostService = {
           },
         }).setOptions({ skipTenant: true });
 
-        // ----------------------------------------
-        // Step 2: publish
-        // ----------------------------------------
         const SocialService = createSocialService({
           tenantId: post.tenantId,
           retry: toRetry ? retry : null,
@@ -39,11 +32,6 @@ export const PostService = {
           },
         });
 
-        // ----------------------------------------
-        // Step 3: determine final status
-        // all failed → 'failed', all success → 'published'
-        // partial → 'published' (results array tells the full story)
-        // ----------------------------------------
         console.log(results);
         const allFailed = results.every((r) => !r.success);
 
@@ -66,10 +54,6 @@ export const PostService = {
           `[PostJob] Post ${post._id} done — posted ✅ ${summary.success} / failed ❌ ${summary.failed}`,
         );
       } catch (err) {
-        // ----------------------------------------
-        // Step 4: unexpected error (not per-platform)
-        // e.g. DB down, SocialService itself threw
-        // ----------------------------------------
         console.error(
           `[PostJob] Unexpected error for post ${post._id}:`,
           err.message,

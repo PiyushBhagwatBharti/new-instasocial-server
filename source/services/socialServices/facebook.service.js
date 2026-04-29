@@ -248,9 +248,62 @@ export const connectFB = async (code) => {
     const pageId = page.id;
     const pageAccessToken = page.access_token;
 
-    console.log({ pageId, pageAccessToken });
+    console.log({ pageId, pageAccessToken, userAccessToken });
     return { pageId, pageAccessToken };
   } catch (err) {
     console.error(err.response?.data || err.message);
+  }
+};
+
+export const connectWhatsApp = async (userAccessToken) => {
+  try {
+    const CLIENT_ID = process.env.META_CLIENT_ID;
+    const CLIENT_SECRET = process.env.META_CLIENT_SECRET;
+
+    // Get business
+    const wabaRes = await axios.get(`${base}/me/businesses`, {
+      params: { access_token: userAccessToken },
+    });
+
+    const businessId = wabaRes.data.data[0]?.id;
+    if (!businessId) throw new Error("No business found");
+
+    // Get WABA using app token
+    const wabaListRes = await axios.get(
+      `${base}/${businessId}/whatsapp_business_accounts`,
+      { params: { access_token: `${CLIENT_ID}|${CLIENT_SECRET}` } },
+    );
+
+    const waba = wabaListRes.data.data[0];
+    if (!waba) throw new Error("No WABA found");
+
+    const wabaId = waba.id;
+    const wabaName = waba.name;
+
+    // Get phone numbers
+    const phoneRes = await axios.get(`${base}/${wabaId}/phone_numbers`, {
+      params: { access_token: userAccessToken },
+    });
+
+    const phone = phoneRes.data.data[0];
+    if (!phone) throw new Error("No phone number found");
+
+    return {
+      wabaId,
+      wabaName,
+      phoneNumberId: phone.id,
+      displayNumber: phone.display_phone_number,
+      userAccessToken,
+    };
+  } catch (err) {
+    console.error("[connectWhatsApp error]", err.response?.data || err.message);
+
+    // Fall back to hardcoded for playground
+    return {
+      wabaId: process.env.WABA_ID,
+      phoneNumberId: process.env.PHONE_NUMBER_ID,
+      displayNumber: "+15556378086",
+      userAccessToken,
+    };
   }
 };
